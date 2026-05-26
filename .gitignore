@@ -11,6 +11,35 @@ pubspec.lock
 # If you don't generate documentation locally you can remove this line.
 doc/api/
 
+# Virtual env
+.venv/
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Jupyter
+.ipynb_checkpoints/
+
+# ML models
+*.pkl
+*.npy
+
+
+# Environment
+.env
+
+# Data
+recommend/backend/data/processed/
+recommend/backend/data/raw/
+*.csv
+*.parquet
+*xlsx
+
+# OS files
+.DS_Store
+Thumbs.db
+
 # dotenv environment variables file
 .env*
 
