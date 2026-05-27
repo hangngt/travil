@@ -22,19 +22,19 @@ __pycache__/
 .ipynb_checkpoints/
 
 # ML models
-*.pkl
-*.npy
+# *.pkl
+# *.npy
 
 
 # Environment
 .env
 
 # Data
-recommend/backend/data/processed/
-recommend/backend/data/raw/
-*.csv
-*.parquet
-*xlsx
+# recommend/backend/data/processed/
+# recommend/backend/data/raw/
+# *.csv
+# *.parquet
+# *xlsx
 
 # OS files
 .DS_Store
