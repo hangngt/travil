@@ -1,4 +1,4 @@
-print(">>> IMPORT MAIN OK")
+print("🔥 FILE LOADED")
 from fastapi import FastAPI
 print("1")
 from ml.hybrid.hybrid_service import HybridService
