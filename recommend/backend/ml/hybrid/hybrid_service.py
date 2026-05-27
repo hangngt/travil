@@ -18,7 +18,7 @@ class HybridService:
         self.svd_model = None
         self._load_svd_model()
         # debug code
-         print("🧠 HybridService __init__ START")
+        print("🧠 HybridService __init__ START")
 
         self.content_service = None
         self.svd_model = None
