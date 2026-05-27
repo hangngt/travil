@@ -1,4 +1,4 @@
-# %%
+print(">>> IMPORT HYBRID OK")
 import pandas as pd
 import numpy as np
 import pickle
@@ -11,7 +11,6 @@ DATA_PROCESSED = BASE_DIR / "data" / "processed"
 MODEL_DIR = BASE_DIR / "ml" / "model"
 
 
-# %%
 class HybridService:
     def __init__(self):
         print("🧠 HybridService INIT START")
