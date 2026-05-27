@@ -42,23 +42,41 @@ class HybridService:
     #         print(" Không tìm thấy svd_model.pkl. Hybrid sẽ chỉ dùng Content + Location.")
     #         self.svd_model = None
     def _load_svd_model(self):
-
-        SVD_URL = "https://drive.google.com/uc?id=1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F"
-
-        download_file(
-            SVD_URL,
-            MODEL_DIR / "svd_model.pkl"
-        )
+        # start debug
+        print("⬇️ START DOWNLOAD SVD MODEL")
 
         try:
-            with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
+            # download
+            print("📡 Downloading from Drive...")
+            # end debug
+
+            SVD_URL = "https://drive.google.com/uc?id=1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F"
+    
+            download_file(
+                SVD_URL,
+                MODEL_DIR / "svd_model.pkl"
+            )
+    
+            try:
+                with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
+                    self.svd_model = pickle.load(f)
+    
+                print("SVD Model loaded successfully")
+    
+            except FileNotFoundError:
+                print("Không tìm thấy svd_model.pkl")
+                self.svd_model = None
+             print("📂 Opening pickle file...")
+            # start debug
+            with open(..., "rb") as f:
                 self.svd_model = pickle.load(f)
+    
+            print("✅ SVD model loaded OK")
 
-            print("SVD Model loaded successfully")
-
-        except FileNotFoundError:
-            print("Không tìm thấy svd_model.pkl")
-            self.svd_model = None
+        except Exception as e:
+            print("❌ SVD LOAD ERROR:", str(e))
+            raise e
+            # end debug
 
     # SVD RECOMMENDATION 
     def _get_svd_scores(self, user_id: str):
