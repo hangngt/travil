@@ -133,12 +133,7 @@ class HybridService:
 
 #  TEST 3 CASES 
 if __name__ == "__main__":
-    hybrid = None
-
-    @app.on_event("startup")
-    def load_model():
-        global hybrid
-        hybrid = HybridService()
+    hybrid = HybridService()
     
     print("="*90)
     print(" HYBRID RECOMMENDATION SYSTEM TEST")
