@@ -1,3 +1,4 @@
+print(">>> IMPORT MAIN OK")
 from fastapi import FastAPI
 from ml.hybrid.hybrid_service import HybridService
 
