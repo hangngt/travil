@@ -4,7 +4,12 @@ from ml.hybrid.hybrid_service import HybridService
 app = FastAPI()
 
 # Load model khi server start
-hybrid = HybridService()
+hybrid = None
+
+@app.on_event("startup")
+def load_model():
+    global hybrid
+    hybrid = HybridService()
 
 @app.get("/")
 def home():
