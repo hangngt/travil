@@ -1,28 +1,87 @@
-# %%
 import pandas as pd
 import numpy as np
 from pathlib import Path
 import pickle
 import math
+import requests
+import os
+from sklearn.preprocessing import normalize
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 DATA_PROCESSED = BASE_DIR / "data" / "processed"
 MODEL_DIR = BASE_DIR / "ml" / "model"
 
-# %%
+# tạo folder nếu chưa có
+os.makedirs(DATA_PROCESSED, exist_ok=True)
+os.makedirs(MODEL_DIR, exist_ok=True)
+
+
+def download_file(url, output_path):
+    if not os.path.exists(output_path):
+        print(f"Downloading {output_path.name} ...")
+
+        response = requests.get(url)
+
+        with open(output_path, "wb") as f:
+            f.write(response.content)
+
+        print(f"Saved: {output_path}")
+
+
 class ContentService:
     def __init__(self):
         self.df = None
         self.tfidf_vectorizer = None
         self.cosine_sim = None
         self._load_data()
-    
+
     def _load_data(self):
-        """Load products và content models"""
-        # Đọc dữ liệu và reset index
-        print("Đang load  ratings...")
-        self.df = pd.read_csv(DATA_PROCESSED / 'products_clean.csv').reset_index(drop=True)
+        # tạo TF-IDF matrix (KHÔNG dùng cosine.npy nữa)
+        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['title'])
+
+        # item embeddings
+        self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
+
+
+        # ===== GOOGLE DRIVE DIRECT LINKS =====
+        PRODUCTS_URL = "https://drive.google.com/file/d/1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY/view?usp=drive_link"
+        TFIDF_URL = "https://drive.google.com/file/d/1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE/view?usp=drive_link"
+        COSINE_URL = "https://drive.google.com/file/d/1g2KeGp4uQMhmt-pSCyliybmiqgNiiEf6/view?usp=drive_link"
+
+        # ===== DOWNLOAD FILES =====
+        download_file(
+            PRODUCTS_URL,
+            DATA_PROCESSED / "products_clean.csv"
+        )
+
+        download_file(
+            TFIDF_URL,
+            DATA_PROCESSED / "tfidf_vectorizer.pkl"
+        )
+
+        download_file(
+            COSINE_URL,
+            DATA_PROCESSED / "cosine_sim.npy"
+        )
+
+        print("Loading data...")
+
+        self.df = pd.read_csv(
+            DATA_PROCESSED / "products_clean.csv"
+        ).reset_index(drop=True)
+
+        with open(
+            DATA_PROCESSED / "tfidf_vectorizer.pkl",
+            "rb"
+        ) as f:
+            self.tfidf_vectorizer = pickle.load(f)
+
+        self.cosine_sim = np.load(
+            DATA_PROCESSED / "cosine_sim.npy"
+        )
+
+        print("Data loaded successfully")
 
         # fix numeric columns
         numeric_cols = [
@@ -202,10 +261,18 @@ class ContentService:
         if viewed_product_id is not None:
             # Tìm sản phẩm tương tự dựa trên nội dung
             target_indices = self.df[self.df['product_id'] == viewed_product_id].index
+
             if len(target_indices) > 0:
                 target_idx = target_indices[0]
-                similarity_vector = self.cosine_sim[target_idx]
-                candidates['similarity_score'] = candidates.index.map(lambda idx: similarity_vector[idx])
+
+                # vector của item đang xem
+                target_vector = self.item_embeddings[target_idx]
+
+                # dot product similarity với tất cả items
+                similarity_scores = np.dot(self.item_embeddings, target_vector)
+
+                # gán score cho candidates
+                candidates['similarity_score'] = similarity_scores[candidates.index]
             else:
                 candidates['similarity_score'] = 0.0
         else:

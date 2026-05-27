@@ -4,11 +4,12 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from ml.content_base.train_tfidf import ContentService # Import class cũ 
+from ml.content_base.train_tfidf import ContentService, download_file # Import class cũ 
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 DATA_PROCESSED = BASE_DIR / "data" / "processed"
 MODEL_DIR = BASE_DIR / "ml" / "model"
+
 
 # %%
 class HybridService:
@@ -17,14 +18,32 @@ class HybridService:
         self.svd_model = None
         self._load_svd_model()
 
+    # def _load_svd_model(self):
+    #     # """Load SVD Model"""
+    #     try:
+    #         with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
+    #             self.svd_model = pickle.load(f)
+    #         print(" SVD Model loaded successfully")
+    #     except FileNotFoundError:
+    #         print(" Không tìm thấy svd_model.pkl. Hybrid sẽ chỉ dùng Content + Location.")
+    #         self.svd_model = None
     def _load_svd_model(self):
-        # """Load SVD Model"""
+
+        SVD_URL = "https://drive.google.com/file/d/1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F/view?usp=sharing"
+
+        download_file(
+            SVD_URL,
+            MODEL_DIR / "svd_model.pkl"
+        )
+
         try:
             with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
                 self.svd_model = pickle.load(f)
-            print(" SVD Model loaded successfully")
+
+            print("SVD Model loaded successfully")
+
         except FileNotFoundError:
-            print(" Không tìm thấy svd_model.pkl. Hybrid sẽ chỉ dùng Content + Location.")
+            print("Không tìm thấy svd_model.pkl")
             self.svd_model = None
 
     # SVD RECOMMENDATION 
