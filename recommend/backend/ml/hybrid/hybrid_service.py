@@ -29,7 +29,7 @@ class HybridService:
     #         self.svd_model = None
     def _load_svd_model(self):
 
-        SVD_URL = "https://drive.google.com/file/d/1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F/view?usp=sharing"
+        SVD_URL = "https://drive.google.com/uc?id=1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F"
 
         download_file(
             SVD_URL,
