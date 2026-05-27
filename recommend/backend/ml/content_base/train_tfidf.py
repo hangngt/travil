@@ -5,7 +5,7 @@ from pathlib import Path
 import pickle
 import math
 
-BASE_DIR = Path.cwd().parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 DATA_PROCESSED = BASE_DIR / "data" / "processed"
 MODEL_DIR = BASE_DIR / "ml" / "model"
