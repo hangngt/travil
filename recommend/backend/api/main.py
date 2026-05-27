@@ -1,6 +1,8 @@
 print(">>> IMPORT MAIN OK")
 from fastapi import FastAPI
+print("1")
 from ml.hybrid.hybrid_service import HybridService
+print("2")
 
 app = FastAPI()
 
@@ -11,15 +13,13 @@ print("🚀 MAIN.PY IMPORTED")   # DEBUG 1
 @app.on_event("startup")
 def load_model():
     global hybrid
-    print("🔥 STARTUP EVENT TRIGGERED")   # DEBUG 2
-
     try:
-        print("📦 Initializing HybridService...")  # DEBUG 3
+        print("🔥 STARTUP START")
         hybrid = HybridService()
-        print("✅ HybridService loaded successfully")  # DEBUG 4
+        print("🔥 STARTUP DONE")
     except Exception as e:
-        print("❌ ERROR IN STARTUP:", str(e))  # DEBUG 5
-        raise e
+        print("❌ STARTUP ERROR:", str(e))
+        raise
 
 
 @app.get("/")
