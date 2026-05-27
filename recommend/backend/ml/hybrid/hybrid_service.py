@@ -6,7 +6,7 @@ from pathlib import Path
 
 from ml.content_base.train_tfidf import ContentService, download_file # Import class cũ 
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parents[2]
 DATA_PROCESSED = BASE_DIR / "data" / "processed"
 MODEL_DIR = BASE_DIR / "ml" / "model"
 
@@ -133,7 +133,12 @@ class HybridService:
 
 #  TEST 3 CASES 
 if __name__ == "__main__":
-    hybrid = HybridService()
+    hybrid = None
+
+    @app.on_event("startup")
+    def load_model():
+        global hybrid
+        hybrid = HybridService()
     
     print("="*90)
     print(" HYBRID RECOMMENDATION SYSTEM TEST")
