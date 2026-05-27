@@ -45,9 +45,9 @@ class ContentService:
 
 
         # ===== GOOGLE DRIVE DIRECT LINKS =====
-        PRODUCTS_URL = "https://drive.google.com/file/d/1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY/view?usp=drive_link"
-        TFIDF_URL = "https://drive.google.com/file/d/1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE/view?usp=drive_link"
-        COSINE_URL = "https://drive.google.com/file/d/1g2KeGp4uQMhmt-pSCyliybmiqgNiiEf6/view?usp=drive_link"
+        PRODUCTS_URL = "https://drive.google.com/uc?id=1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY"
+        TFIDF_URL = "https://drive.google.com/uc?id=1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE"
+        COSINE_URL = "https://drive.google.com/uc?id=1g2KeGp4uQMhmt-pSCyliybmiqgNiiEf6"
 
         # ===== DOWNLOAD FILES =====
         download_file(
