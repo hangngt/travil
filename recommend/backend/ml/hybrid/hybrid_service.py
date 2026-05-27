@@ -17,6 +17,20 @@ class HybridService:
         self.content_service = ContentService()
         self.svd_model = None
         self._load_svd_model()
+        # debug code
+         print("🧠 HybridService __init__ START")
+
+        self.content_service = None
+        self.svd_model = None
+
+        print("📦 Loading ContentService...")
+        self.content_service = ContentService()
+        print("✅ ContentService loaded")
+
+        print("📥 Loading SVD model...")
+        self._load_svd_model()
+        print("✅ SVD loaded")
+        # end debug
 
     # def _load_svd_model(self):
     #     # """Load SVD Model"""
