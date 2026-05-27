@@ -14,70 +14,34 @@ MODEL_DIR = BASE_DIR / "ml" / "model"
 # %%
 class HybridService:
     def __init__(self):
+        print("🧠 HybridService INIT START")
+
         self.content_service = ContentService()
         self.svd_model = None
-        self._load_svd_model()
-        # debug code
-        print("🧠 HybridService __init__ START")
-
-        self.content_service = None
-        self.svd_model = None
-
-        print("📦 Loading ContentService...")
-        self.content_service = ContentService()
-        print("✅ ContentService loaded")
 
         print("📥 Loading SVD model...")
         self._load_svd_model()
-        print("✅ SVD loaded")
-        # end debug
+        print("✅ INIT DONE")
 
-    # def _load_svd_model(self):
-    #     # """Load SVD Model"""
-    #     try:
-    #         with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
-    #             self.svd_model = pickle.load(f)
-    #         print(" SVD Model loaded successfully")
-    #     except FileNotFoundError:
-    #         print(" Không tìm thấy svd_model.pkl. Hybrid sẽ chỉ dùng Content + Location.")
-    #         self.svd_model = None
     def _load_svd_model(self):
-        # start debug
-        print("⬇️ START DOWNLOAD SVD MODEL")
+        print("⬇️ START LOAD SVD")
 
         try:
-            # download
-            print("📡 Downloading from Drive...")
-            # end debug
-
             SVD_URL = "https://drive.google.com/uc?id=1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F"
-    
+
             download_file(
                 SVD_URL,
                 MODEL_DIR / "svd_model.pkl"
             )
-    
-            try:
-                with open(MODEL_DIR / 'svd_model.pkl', 'rb') as f:
-                    self.svd_model = pickle.load(f)
-    
-                print("SVD Model loaded successfully")
-    
-            except FileNotFoundError:
-                print("Không tìm thấy svd_model.pkl")
-                self.svd_model = None
-             print("📂 Opening pickle file...")
-            # start debug
-            with open(..., "rb") as f:
+
+            with open(MODEL_DIR / "svd_model.pkl", "rb") as f:
                 self.svd_model = pickle.load(f)
-    
-            print("✅ SVD model loaded OK")
+
+            print("✅ SVD loaded OK")
 
         except Exception as e:
-            print("❌ SVD LOAD ERROR:", str(e))
-            raise e
-            # end debug
-
+            print("❌ SVD ERROR:", str(e))
+            self.svd_model = None
     # SVD RECOMMENDATION 
     def _get_svd_scores(self, user_id: str):
         """Trả về điểm SVD đã được chuẩn hóa cho tất cả items của 1 user"""
