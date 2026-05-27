@@ -3,17 +3,29 @@ from ml.hybrid.hybrid_service import HybridService
 
 app = FastAPI()
 
-# Load model khi server start
 hybrid = None
+
+print("🚀 MAIN.PY IMPORTED")   # DEBUG 1
 
 @app.on_event("startup")
 def load_model():
     global hybrid
-    hybrid = HybridService()
+    print("🔥 STARTUP EVENT TRIGGERED")   # DEBUG 2
+
+    try:
+        print("📦 Initializing HybridService...")  # DEBUG 3
+        hybrid = HybridService()
+        print("✅ HybridService loaded successfully")  # DEBUG 4
+    except Exception as e:
+        print("❌ ERROR IN STARTUP:", str(e))  # DEBUG 5
+        raise e
+
 
 @app.get("/")
 def home():
+    print("🏠 HOME CALLED")
     return {"message": "Travel Recommendation API"}
+
 
 @app.get("/recommend")
 def recommend(
@@ -22,12 +34,20 @@ def recommend(
     lat: float = None,
     lng: float = None,
 ):
-    results = hybrid.recommend(
-        user_id=user_id,
-        city_name=city,
-        user_lat=lat,
-        user_lng=lng,
-        top_k=10
-    )
+    print(f"📍 RECOMMEND CALLED | city={city}, user_id={user_id}, lat={lat}, lng={lng}")
 
-    return results.to_dict(orient="records")
+    try:
+        results = hybrid.recommend(
+            user_id=user_id,
+            city_name=city,
+            user_lat=lat,
+            user_lng=lng,
+            top_k=10
+        )
+
+        print("📊 Recommendation success, rows:", len(results))
+        return results.to_dict(orient="records")
+
+    except Exception as e:
+        print("❌ ERROR IN RECOMMEND:", str(e))
+        return {"error": str(e)}
