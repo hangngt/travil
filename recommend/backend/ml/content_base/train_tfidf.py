@@ -3,7 +3,6 @@ import numpy as np
 from pathlib import Path
 import pickle
 import math
-import requests
 import os
 from sklearn.preprocessing import normalize
 
