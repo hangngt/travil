@@ -36,51 +36,43 @@ class ContentService:
         self._load_data()
 
     def _load_data(self):
-        # tạo TF-IDF matrix (KHÔNG dùng cosine.npy nữa)
-        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['title'])
-
-        # item embeddings
-        self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
-
-
-        # ===== GOOGLE DRIVE DIRECT LINKS =====
+        # GOOGLE DRIVE DIRECT LINKS 
         PRODUCTS_URL = "https://drive.google.com/uc?id=1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY"
         TFIDF_URL = "https://drive.google.com/uc?id=1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE"
         COSINE_URL = "https://drive.google.com/uc?id=1g2KeGp4uQMhmt-pSCyliybmiqgNiiEf6"
-
-        # ===== DOWNLOAD FILES =====
-        download_file(
-            PRODUCTS_URL,
-            DATA_PROCESSED / "products_clean.csv"
-        )
-
-        download_file(
-            TFIDF_URL,
-            DATA_PROCESSED / "tfidf_vectorizer.pkl"
-        )
-
-        download_file(
-            COSINE_URL,
-            DATA_PROCESSED / "cosine_sim.npy"
-        )
-
+    
+        # DOWNLOAD FIRST 
+        download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
+        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
+        download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
+    
         print("Loading data...")
-
-        self.df = pd.read_csv(
-            DATA_PROCESSED / "products_clean.csv"
-        ).reset_index(drop=True)
-
-        with open(
-            DATA_PROCESSED / "tfidf_vectorizer.pkl",
-            "rb"
-        ) as f:
+    
+        # LOAD DATA FIRST 
+        self.df = pd.read_csv(DATA_PROCESSED / "products_clean.csv").reset_index(drop=True)
+    
+        self.cosine_sim = np.load(DATA_PROCESSED / "cosine_sim.npy")
+    
+        with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "rb") as f:
             self.tfidf_vectorizer = pickle.load(f)
-
-        self.cosine_sim = np.load(
-            DATA_PROCESSED / "cosine_sim.npy"
-        )
-
+    
         print("Data loaded successfully")
+    
+        # FIX NUMERIC COLUMNS
+        numeric_cols = ['rating', 'booked_count', 'review_count', 'lat', 'lng']
+        for col in numeric_cols:
+            self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
+    
+        #  CHECK NULL
+        if self.tfidf_vectorizer is None:
+            raise ValueError("TF-IDF vectorizer load failed!")
+    
+        #  NOW SAFE TO USE 
+        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['title'])
+    
+        self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
+    
+        print(f"Loaded {len(self.df)} products")
 
         # fix numeric columns
         numeric_cols = [
