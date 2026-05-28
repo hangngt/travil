@@ -36,10 +36,10 @@ class ContentService:
         self._load_data()
 
     def _load_data(self):
-        # GOOGLE DRIVE DIRECT LINKS 
-        PRODUCTS_URL = "https://drive.google.com/uc?id=1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY"
-        TFIDF_URL = "https://drive.google.com/uc?id=1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE"
-        COSINE_URL = "https://drive.google.com/uc?id=1g2KeGp4uQMhmt-pSCyliybmiqgNiiEf6"
+        # github release LINKS 
+        PRODUCTS_URL = "https://github.com/hangngt/travil/releases/download/v1.0/products_clean.csv"
+        TFIDF_URL = "https://github.com/hangngt/travil/releases/download/v1.0/tfidf_vectorizer.pkl"
+        COSINE_URL = "https://github.com/hangngt/travil/releases/download/v1.0/cosine_sim.npy"
     
         # DOWNLOAD FIRST 
         download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")

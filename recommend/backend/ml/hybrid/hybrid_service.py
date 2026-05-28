@@ -22,7 +22,7 @@ class HybridService:
     def _load_svd_model(self):
 
         try:
-            SVD_URL = "https://drive.google.com/uc?id=1aumP3Eo6ZwM0HwBk-33B7rOvXQiQsr0F"
+            SVD_URL = "https://github.com/hangngt/travil/releases/download/v1.0/svd_model.pkl"
 
             download_file(
                 SVD_URL,
