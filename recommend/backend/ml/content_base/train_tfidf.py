@@ -88,7 +88,6 @@ class ContentService:
                 self.df[col],
                 errors='coerce'
             )
-
         
         # Load TF-IDF & Cosine Similarity
         with open(DATA_PROCESSED / 'tfidf_vectorizer.pkl', 'rb') as f:
@@ -166,13 +165,13 @@ class ContentService:
     
     #CASE 2: NEARBY GPS 
     def get_nearby_places(self, user_lat: float, user_lng: float, radius_km=10, top_k=15):
-        """
-        CASE 2 - User bật GPS
-        Step 1: Lấy lat_user, lng_user
-        Step 2: Tính distance tới mọi products (Haversine)
-        Step 3: Lọc: distance <= radius_km (Công thức số 10)
-        Step 4: Ranking theo final score
-        """
+        # """
+        # CASE 2 - User bật GPS
+        # Step 1: Lấy lat_user, lng_user
+        # Step 2: Tính distance tới mọi products (Haversine)
+        # Step 3: Lọc: distance <= radius_km (Công thức số 10)
+        # Step 4: Ranking theo final score
+        # """
         # Lọc các sản phẩm có tọa độ
         valid_geo_df = self.df.dropna(subset=['lat', 'lng']).copy()
         
@@ -357,5 +356,4 @@ if __name__ == "__main__":
         top_k=10
     )
     print(hybrid[['product_id', 'title', 'location', 'rating', 'final_score']].head(10))
-
 

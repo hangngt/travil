@@ -34,7 +34,13 @@ recommend/backend/data/processed/
 recommend/backend/data/raw/
 *.csv
 *.parquet
-*xlsx
+*.xlsx
+*.joblib
+
+
+# Firebase secrets
+android/app/google-services.json
+recommend/backend/config/firebase-credentials.json
 
 # OS files
 .DS_Store
