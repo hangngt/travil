@@ -2,7 +2,7 @@
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from ml.hybrid.hybrid_service import HybridService
+from recommend.backend.ml.hybrid.hybrid_service import HybridService
 
 app = FastAPI()
 

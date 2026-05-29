@@ -195,36 +195,36 @@ def train_svd_model():
 if __name__ == "__main__":
     best_P, best_Q, user_ids, item_ids, ratings = train_svd_model()
 
-# %%
-#TEST DỰ ĐOÁN
-print(f"\n{'='*50}")
-print("TEST DỰ ĐOÁN CHO USER ĐẦU TIÊN")
-print(f"{'='*50}")
+    # %%
+    #TEST DỰ ĐOÁN
+    print(f"\n{'='*50}")
+    print("TEST DỰ ĐOÁN CHO USER ĐẦU TIÊN")
+    print(f"{'='*50}")
 
-# Lấy user đầu tiên để test
-test_user_idx = 0
-test_user_id = user_ids[test_user_idx]
+    # Lấy user đầu tiên để test
+    test_user_idx = 0
+    test_user_id = user_ids[test_user_idx]
 
-# Lấy các item user đã rating
-user_ratings = ratings[ratings['user_idx'] == test_user_idx]
-print(f"\nUser {test_user_id} đã rating {len(user_ratings)} sản phẩm:")
+    # Lấy các item user đã rating
+    user_ratings = ratings[ratings['user_idx'] == test_user_idx]
+    print(f"\nUser {test_user_id} đã rating {len(user_ratings)} sản phẩm:")
 
-# Dự đoán cho tất cả item
-predictions = []
-for item_idx in range(n_items):
-    pred = np.dot(best_P[test_user_idx], best_Q[item_idx])
-    predictions.append(pred)
+    # Dự đoán cho tất cả item
+    predictions = []
+    for item_idx in range(n_items):
+        pred = np.dot(best_P[test_user_idx], best_Q[item_idx])
+        predictions.append(pred)
 
-# Lấy top 5 item có dự đoán cao nhất
-top_items = np.argsort(predictions)[-5:][::-1]
-print(f"\nTop 5 sản phẩm gợi ý cho user {test_user_id}:")
-for i, item_idx in enumerate(top_items, 1):
-    item_id = item_ids[item_idx]
-    pred_score = predictions[item_idx]
-    
-    # Kiểm tra xem user đã rating item này chưa
-    rated = item_id in user_ratings['product_id'].values
-    status = " ĐÃ RATING" if rated else " GỢI Ý MỚI"
-    
-    print(f"  {i}. Item {item_id} | Score: {pred_score:.4f} | {status}")
+    # Lấy top 5 item có dự đoán cao nhất
+    top_items = np.argsort(predictions)[-5:][::-1]
+    print(f"\nTop 5 sản phẩm gợi ý cho user {test_user_id}:")
+    for i, item_idx in enumerate(top_items, 1):
+        item_id = item_ids[item_idx]
+        pred_score = predictions[item_idx]
+        
+        # Kiểm tra xem user đã rating item này chưa
+        rated = item_id in user_ratings['product_id'].values
+        status = " ĐÃ RATING" if rated else " GỢI Ý MỚI"
+        
+        print(f"  {i}. Item {item_id} | Score: {pred_score:.4f} | {status}")
 

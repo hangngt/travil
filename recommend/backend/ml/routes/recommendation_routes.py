@@ -1,5 +1,5 @@
 from fastapi import APIRouter, BackgroundTasks
-from services.hybrid_service import HybridService
+from recommend.backend.ml.hybrid.hybrid_service import HybridService
 
 router = APIRouter()
 hybrid = HybridService()

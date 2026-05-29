@@ -3,7 +3,7 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from recommend.backend.ml.content_base.train_tfidf import ContentService # Import class cũ 
+from recommend.backend.ml.content_base.train_tfidf import ContentService, download_file # Import class cũ 
 
 import logging
 
@@ -14,55 +14,42 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 
 DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
 MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
-
-
 class HybridService:
     def __init__(self):
-
         self.content_service = ContentService()
         self.svd_model = None
-        self.pending_ratings = 0    # Counter rating mới
+        self.pending_ratings = 0
+        self.rating_cache = {}
 
-        print(" Loading SVD model...")
+        logger.info("🔄 Loading SVD model from latest release...")
         self._load_svd_model()
 
     def _load_svd_model(self):
-
         try:
-            SVD_URL = "https://github.com/hangngt/travil/releases/download/v1.0/svd_model.pkl"
+            BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
+            SVD_URL = f"{BASE_URL}/svd_model.pkl"
 
-            download_file(
-                SVD_URL,
-                MODEL_DIR / "svd_model.pkl"
-            )
+            download_file(SVD_URL, MODEL_DIR / "svd_model.pkl")
 
             with open(MODEL_DIR / "svd_model.pkl", "rb") as f:
                 self.svd_model = pickle.load(f)
-            print("SVD Model loaded")
-
+            logger.info(" SVD Model loaded from latest release")
         except Exception as e:
-            print(" SVD ERROR:", str(e))
+            logger.error(f" SVD load failed: {e}")
             self.svd_model = None
 
-
-    # NCREMENTAL RATING UPDATE
     def add_rating(self, user_id: str, product_id: int, rating: float):
-        # """Gọi khi có rating mới từ Firebase"""
+        """Gọi khi nhận rating mới từ Firebase"""
         self.pending_ratings += 1
         
-        # Update cache rating (dùng cho ranking tạm thời)
-        if not hasattr(self, 'rating_cache'):
-            self.rating_cache = {}
         if user_id not in self.rating_cache:
             self.rating_cache[user_id] = {}
         self.rating_cache[user_id][product_id] = rating
 
-        # Nếu quá threshold → trigger retrain background
-        if self.pending_ratings >= 800:   # Điều chỉnh theo nhu cầu
-            print(f"Đạt threshold {self.pending_ratings} ratings → Trigger retrain")
-            # TODO: Gọi background task retrain SVD
+        if self.pending_ratings >= 1000:
+            logger.info(f" Đạt ngưỡng {self.pending_ratings} ratings → Nên retrain")
 
-        print(f" Saved rating: {user_id} → {product_id} = {rating}")
+        logger.info(f" Saved rating: {user_id} → {product_id} = {rating}")
     # SVD RECOMMENDATION 
     def _get_svd_scores(self, user_id: str):
         """Trả về điểm SVD đã được chuẩn hóa cho tất cả items của 1 user"""

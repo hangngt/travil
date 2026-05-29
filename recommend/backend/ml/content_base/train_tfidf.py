@@ -6,6 +6,7 @@ import math
 import os
 from sklearn.preprocessing import normalize
 import logging
+from sklearn.feature_extraction.text import TfidfVectorizer
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -18,21 +19,29 @@ MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
-
-
 def download_file(url, output_path):
-    if not os.path.exists(output_path):
-        logger.info(f"Downloading {output_path.name} ...")
-        response = requests.get(url, timeout=30)
+    """Download với hỗ trợ latest release"""
+    if os.path.exists(output_path):
+        logger.info(f" Using cached: {output_path.name}")
+        return True
+    
+    logger.info(f"📥 Downloading {output_path.name} from latest release...")
+    try:
+        response = requests.get(url, timeout=60)
+        response.raise_for_status()
+        
         with open(output_path, "wb") as f:
             f.write(response.content)
-        logger.info(f"Saved: {output_path.name}")
+        logger.info(f" Downloaded: {output_path.name}")
+        return True
+    except Exception as e:
+        logger.error(f" Download failed: {e}")
+        return False
 
 
 def train_content_model():
-    """Train TF-IDF khi products thay đổi"""
-    logger.info(" Training Content-based model (TF-IDF)...")
-    
+    """Train TF-IDF + Cosine Similarity"""
+    logger.info(" Training Content-based model...")
     try:
         df = pd.read_csv(DATA_PROCESSED / "products_clean.csv")
         
@@ -51,81 +60,52 @@ def train_content_model():
             pickle.dump(tfidf, f)
         np.save(DATA_PROCESSED / "cosine_sim.npy", cosine_sim)
 
-        logger.info(f" Content model trained with {len(df)} products")
+        logger.info(f" Content model trained successfully with {len(df)} products")
         return True
-
     except Exception as e:
-        logger.error(f" Train content model failed: {e}")
+        logger.error(f" Train content failed: {e}")
         return False
+
 
 class ContentService:
     def __init__(self):
         self.df = None
         self.tfidf_vectorizer = None
         self.cosine_sim = None
+        self.item_embeddings = None
         self._load_data()
 
     def _load_data(self):
-        # github release LINKS 
-        PRODUCTS_URL = "https://github.com/hangngt/travil/releases/download/v1.0/products_clean.csv"
-        TFIDF_URL = "https://github.com/hangngt/travil/releases/download/v1.0/tfidf_vectorizer.pkl"
-        COSINE_URL = "https://github.com/hangngt/travil/releases/download/v1.0/cosine_sim.npy"
-    
-        # DOWNLOAD FIRST 
+        """Load models từ Latest GitHub Release"""
+        BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
+        
+        PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
+        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
+        COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
+
+        # Download
         download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
         download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
         download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
-    
-        print("Loading data...")
-    
-        # LOAD DATA FIRST 
+
+        # Load data
         self.df = pd.read_csv(DATA_PROCESSED / "products_clean.csv").reset_index(drop=True)
-    
-        self.cosine_sim = np.load(DATA_PROCESSED / "cosine_sim.npy")
-    
+        
         with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "rb") as f:
             self.tfidf_vectorizer = pickle.load(f)
-    
-        print("Data loaded successfully")
-    
-        # FIX NUMERIC COLUMNS
+        
+        self.cosine_sim = np.load(DATA_PROCESSED / "cosine_sim.npy")
+
+        # Fix numeric columns
         numeric_cols = ['rating', 'booked_count', 'review_count', 'lat', 'lng']
         for col in numeric_cols:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
-    
-        #  CHECK NULL
-        if self.tfidf_vectorizer is None:
-            raise ValueError("TF-IDF vectorizer load failed!")
-    
-        #  NOW SAFE TO USE 
-        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['title'])
-    
+
+        # Create item embeddings
+        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['combined_text'].fillna(''))
         self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
-    
-        print(f"Loaded {len(self.df)} products")
 
-        # fix numeric columns
-        numeric_cols = [
-        'rating',
-        'booked_count',
-        'review_count',
-        'lat',
-        'lng'
-        ]
-
-        for col in numeric_cols:
-            self.df[col] = pd.to_numeric(
-                self.df[col],
-                errors='coerce'
-            )
-        
-        # Load TF-IDF & Cosine Similarity
-        with open(DATA_PROCESSED / 'tfidf_vectorizer.pkl', 'rb') as f:
-            self.tfidf_vectorizer = pickle.load(f)
-        
-        self.cosine_sim = np.load(DATA_PROCESSED / 'cosine_sim.npy')
-        print(f" Loaded {len(self.df)} products for recommendation")
-        print(self.df.dtypes)
+        logger.info(f" ContentService loaded {len(self.df)} products from latest release")
 
     #HAVERSINE DISTANCE
     def haversine_distance(self, lat1, lon1, lat2, lon2):
