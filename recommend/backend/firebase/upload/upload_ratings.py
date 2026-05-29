@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 import pandas as pd
 import firebase_admin
@@ -7,16 +6,12 @@ from pathlib import Path
 import time
 from google.api_core.exceptions import ResourceExhausted
 
-# ===================================
 # PATH
-# ===================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 RATINGS_CSV = BASE_DIR / "data" / "processed" / "user_item_ratings_real.csv"
 
-# ===================================
 # FIREBASE INIT
-# ===================================
 
 cred = credentials.Certificate(
     BASE_DIR / "config" / "firebase-credentials.json"
@@ -25,9 +20,7 @@ cred = credentials.Certificate(
 firebase_admin.initialize_app(cred)
 db = firestore.client()
 
-# ===================================
 # SAFE COMMIT
-# ===================================
 
 def safe_commit(batch, retries=5):
     for i in range(retries):
@@ -36,19 +29,14 @@ def safe_commit(batch, retries=5):
             return
         except ResourceExhausted:
             wait = 2 ** i
-            print(f"⚠️ Quota exceeded → retry in {wait}s")
+            print(f" Quota exceeded → retry in {wait}s")
             time.sleep(wait)
 
-    raise Exception("❌ Commit failed after retries")
+    raise Exception(" Commit failed after retries")
 
-# ===================================
 # UPLOAD USERS
-# ===================================
 
 def upload_users(user_mapping):
-    print("\n====================")
-    print("UPLOAD USERS")
-    print("====================")
 
     batch = db.batch()
     ops = 0
@@ -74,16 +62,12 @@ def upload_users(user_mapping):
     if ops > 0:
         safe_commit(batch)
 
-    print("✅ Users uploaded!")
+    print(" Users uploaded!")
 
-# ===================================
 # UPLOAD INTERACTIONS
-# ===================================
 
 def upload_interactions(df, user_mapping):
-    print("\n====================")
     print("UPLOAD INTERACTIONS")
-    print("====================")
 
     batch = db.batch()
     ops = 0
@@ -112,17 +96,12 @@ def upload_interactions(df, user_mapping):
     if ops > 0:
         safe_commit(batch)
 
-    print("✅ Interactions uploaded!")
+    print("Interactions uploaded!")
 
-# ===================================
-# MAIN FUNCTION
-# ===================================
 
 def upload_users_and_interactions():
 
-    print("\n==============================")
     print("UPLOAD FIREBASE DATA")
-    print("==============================")
 
     df = pd.read_csv(RATINGS_CSV)
 
@@ -139,15 +118,10 @@ def upload_users_and_interactions():
     upload_users(user_mapping)
     upload_interactions(df, user_mapping)
 
-    print("\n==============================")
     print("DONE!")
-    print("==============================")
     print(f"Users: {len(user_mapping)}")
     print(f"Interactions: {len(df)}")
 
-# ===================================
-# RUN
-# ===================================
 
 if __name__ == "__main__":
     upload_users_and_interactions()

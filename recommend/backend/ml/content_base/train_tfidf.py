@@ -5,11 +5,15 @@ import pickle
 import math
 import os
 from sklearn.preprocessing import normalize
+import logging
 
-BASE_DIR = Path(__file__).resolve().parents[2]
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
-DATA_PROCESSED = BASE_DIR / "data" / "processed"
-MODEL_DIR = BASE_DIR / "ml" / "model"
+BASE_DIR = Path(__file__).resolve().parents[4]
+
+DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
+MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
 
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
@@ -18,15 +22,41 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 def download_file(url, output_path):
     if not os.path.exists(output_path):
-        print(f"Downloading {output_path.name} ...")
-
-        response = requests.get(url)
-
+        logger.info(f"Downloading {output_path.name} ...")
+        response = requests.get(url, timeout=30)
         with open(output_path, "wb") as f:
             f.write(response.content)
+        logger.info(f"Saved: {output_path.name}")
 
-        print(f"Saved: {output_path}")
 
+def train_content_model():
+    """Train TF-IDF khi products thay đổi"""
+    logger.info(" Training Content-based model (TF-IDF)...")
+    
+    try:
+        df = pd.read_csv(DATA_PROCESSED / "products_clean.csv")
+        
+        df['combined_text'] = (
+            df['title'].fillna('') + " " + 
+            df.get('description', '').fillna('') + " " + 
+            df['location'].fillna('')
+        )
+
+        tfidf = TfidfVectorizer(max_features=5000, stop_words='english', ngram_range=(1, 2))
+        tfidf_matrix = tfidf.fit_transform(df['combined_text'])
+        
+        cosine_sim = normalize(tfidf_matrix).toarray().astype(np.float32)
+
+        with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "wb") as f:
+            pickle.dump(tfidf, f)
+        np.save(DATA_PROCESSED / "cosine_sim.npy", cosine_sim)
+
+        logger.info(f" Content model trained with {len(df)} products")
+        return True
+
+    except Exception as e:
+        logger.error(f" Train content model failed: {e}")
+        return False
 
 class ContentService:
     def __init__(self):

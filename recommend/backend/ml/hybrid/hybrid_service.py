@@ -3,11 +3,17 @@ import numpy as np
 import pickle
 from pathlib import Path
 
-from ml.content_base.train_tfidf import ContentService, download_file # Import class cũ 
+from recommend.backend.ml.content_base.train_tfidf import ContentService # Import class cũ 
 
-BASE_DIR = Path(__file__).resolve().parents[2]
-DATA_PROCESSED = BASE_DIR / "data" / "processed"
-MODEL_DIR = BASE_DIR / "ml" / "model"
+import logging
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
+BASE_DIR = Path(__file__).resolve().parents[4]
+
+DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
+MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
 
 
 class HybridService:
@@ -15,6 +21,7 @@ class HybridService:
 
         self.content_service = ContentService()
         self.svd_model = None
+        self.pending_ratings = 0    # Counter rating mới
 
         print(" Loading SVD model...")
         self._load_svd_model()
@@ -31,11 +38,31 @@ class HybridService:
 
             with open(MODEL_DIR / "svd_model.pkl", "rb") as f:
                 self.svd_model = pickle.load(f)
-
+            print("SVD Model loaded")
 
         except Exception as e:
             print(" SVD ERROR:", str(e))
             self.svd_model = None
+
+
+    # NCREMENTAL RATING UPDATE
+    def add_rating(self, user_id: str, product_id: int, rating: float):
+        # """Gọi khi có rating mới từ Firebase"""
+        self.pending_ratings += 1
+        
+        # Update cache rating (dùng cho ranking tạm thời)
+        if not hasattr(self, 'rating_cache'):
+            self.rating_cache = {}
+        if user_id not in self.rating_cache:
+            self.rating_cache[user_id] = {}
+        self.rating_cache[user_id][product_id] = rating
+
+        # Nếu quá threshold → trigger retrain background
+        if self.pending_ratings >= 800:   # Điều chỉnh theo nhu cầu
+            print(f"Đạt threshold {self.pending_ratings} ratings → Trigger retrain")
+            # TODO: Gọi background task retrain SVD
+
+        print(f" Saved rating: {user_id} → {product_id} = {rating}")
     # SVD RECOMMENDATION 
     def _get_svd_scores(self, user_id: str):
         """Trả về điểm SVD đã được chuẩn hóa cho tất cả items của 1 user"""
@@ -77,48 +104,42 @@ class HybridService:
                   user_lng: float = None,
                   viewed_product_id: int = None,
                   top_k: int = 15):
-        # """
-        # Hybrid Recommendation System
-        # Ưu tiên: SVD (nếu user có lịch sử) → Content + Location
-        # """
+        
         # Bước 1: Lấy candidates từ Content + Geo
         candidates = self.content_service.recommend_hybrid(
             city_name=city_name,
             user_lat=user_lat,
             user_lng=user_lng,
             viewed_product_id=viewed_product_id,
-            top_k=top_k * 3  # Lấy dư để rerank
+            top_k=top_k * 3
         ).copy()
 
-        # Bước 2: Nếu có user_id → Kết hợp SVD
+        # Bước 2: Nếu có SVD model → rerank
         if user_id and self.svd_model is not None:
-            svd_df = self._get_svd_scores(user_id)
             
+            svd_df = self._get_svd_scores(user_id)
             if svd_df is not None and not svd_df.empty:
                 # Merge SVD score
                 candidates = candidates.merge(svd_df, on='product_id', how='left')
-                # Điền giá trị trung bình chuẩn (thường là ~4.0) cho các sản phẩm mới chưa có điểm SVD
-                mean_svd = candidates['svd_score'].mean() if pd.notna(candidates['svd_score'].mean()) else 4.0
+                 # Điền giá trị trung bình chuẩn (thường là ~4.0) cho các sản phẩm mới chưa có điểm SVD
+                mean_svd = candidates['svd_score'].mean() or 4.0
                 candidates['svd_score'] = candidates['svd_score'].fillna(mean_svd)
-                
-                # Hybrid Score (có thể điều chỉnh trọng số)
+                 # Hybrid Score 
                 candidates['hybrid_score'] = (
-                    0.55 * candidates['final_score'] +      # Content + Location
-                    0.45 * candidates['svd_score']          # Collaborative
+                    0.52 * candidates['final_score'] +  # Content + Location
+                    0.48 * candidates['svd_score'] # Collaborative
                 )
             else:
                 candidates['hybrid_score'] = candidates['final_score']
         else:
             candidates['hybrid_score'] = candidates['final_score']
-
         # Sắp xếp và trả về Top-K
         candidates = candidates.sort_values('hybrid_score', ascending=False)
-        
         #  Tạo danh sách cột động tùy thuộc vào việc có bật định vị GPS hay không
         result_columns = ['product_id', 'title', 'location', 'rating', 'hybrid_score']
         if 'distance_km' in candidates.columns:
             result_columns.append('distance_km')
- 
+            
         return candidates.head(top_k)[result_columns].round(4)
 
 #  TEST 3 CASES 
