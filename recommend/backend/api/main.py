@@ -1,27 +1,57 @@
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
-
+from contextlib import asynccontextmanager
 from recommend.backend.ml.hybrid.hybrid_service import HybridService
 
-app = FastAPI()
 
-hybrid = None
-@app.on_event("startup")
-def load_model():
-    global hybrid
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+
     try:
-        hybrid = HybridService()
+
+        print("Loading HybridService...")
+
+        app.state.hybrid = HybridService()
+
+        print("HybridService loaded successfully")
+
     except Exception as e:
+
         import traceback
-        print(" STARTUP ERROR:", str(e))
+
+        print("STARTUP ERROR:", str(e))
         print(traceback.format_exc())
-        hybrid = None   # KHÔNG raise để tránh kill server
+
+        app.state.hybrid = None
+
+    yield
+
+    print("Server shutting down...")
+
+app = FastAPI( lifespan=lifespan)
+
+# hybrid = None
+# @app.on_event("startup")
+# def load_model():
+#     global hybrid
+#     try:
+#         hybrid = HybridService()
+#     except Exception as e:
+#         import traceback
+#         print(" STARTUP ERROR:", str(e))
+#         print(traceback.format_exc())
+#         hybrid = None   # KHÔNG raise để tránh kill server
+
 
 
 @app.get("/")
 def home():
+
+    hybrid = app.state.hybrid
+
     print("HOME CALLED")
+
     return {
         "message": "Travel Recommendation API",
         "status": "running",
@@ -29,7 +59,9 @@ def home():
     }
 
 
+
 # RECOMMEND API
+
 @app.get("/recommend")
 def recommend(
     city: str = None,
@@ -37,9 +69,16 @@ def recommend(
     lat: float = None,
     lng: float = None,
 ):
-    print(f" RECOMMEND CALLED | city={city}, user_id={user_id}, lat={lat}, lng={lng}")
+
+    hybrid = app.state.hybrid
+
+    print(
+        f"RECOMMEND CALLED  "
+        f"city={city}, user_id={user_id}, lat={lat}, lng={lng}"
+    )
 
     if hybrid is None:
+
         return JSONResponse(
             status_code=503,
             content={
@@ -49,6 +88,7 @@ def recommend(
         )
 
     try:
+
         results = hybrid.recommend(
             user_id=user_id,
             city_name=city,
@@ -58,11 +98,14 @@ def recommend(
         )
 
         print("Recommendation success, rows:", len(results))
+
         return results.to_dict(orient="records")
 
     except Exception as e:
+
         import traceback
-        print(" ERROR IN RECOMMEND:", str(e))
+
+        print("ERROR IN RECOMMEND:", str(e))
         print(traceback.format_exc())
 
         return JSONResponse(
