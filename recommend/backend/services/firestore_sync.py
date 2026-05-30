@@ -1,6 +1,7 @@
 import firebase_admin
 from firebase_admin import credentials, firestore
 import pandas as pd
+import os
 from pathlib import Path
 from datetime import datetime
 import logging
@@ -19,14 +20,15 @@ print(SERVICE_ACCOUNT_PATH.exists())
 
 class FirestoreSync:
     def __init__(self):
-        """Khởi tạo Firebase connection"""
         if not firebase_admin._apps:
             try:
-                cred = credentials.Certificate(SERVICE_ACCOUNT_PATH)
+                # Render sẽ đọc file từ thư mục này
+                cred_path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS", "firebase/service_account.json")
+                cred = credentials.Certificate(cred_path)
                 firebase_admin.initialize_app(cred)
-                logger.info(" Firebase initialized successfully")
+                logger.info(" Firebase connected successfully on Render")
             except Exception as e:
-                logger.error(f" Firebase init failed: {e}")
+                logger.error(f" Firebase connection failed: {e}")
                 raise
         
         self.db = firestore.client()

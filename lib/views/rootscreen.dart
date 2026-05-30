@@ -1,21 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:joggapp/data/services/auth_service.dart';
-import 'package:joggapp/views/home.dart';
-import 'package:joggapp/views/loginscreen.dart';
 import 'package:provider/provider.dart';
 
-// màn hình điều hướng theo trạng thái đăng nhập
-// Kiểm tra user đã đăng nhập chưa
-class Rootscreen extends StatelessWidget {
-  const Rootscreen({super.key});
+import '../data/services/auth_service.dart';
+import 'main_navigation.dart';
+import 'auth/login_screen.dart';
+
+class RootScreen extends StatelessWidget {
+  const RootScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
 
-    if (auth.user == null) {
+    if (auth.currentUser == null) {
       return const LoginScreen();
-    }a
-    return const Homescreen();
+    }
+    return const MainNavigation();
   }
 }

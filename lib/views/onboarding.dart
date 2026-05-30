@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'package:joggapp/core/color.dart';
-import 'package:joggapp/views/rootscreen.dart';
+import 'package:travil/core/color.dart';
+import 'package:travil/views/rootscreen.dart';
 
 class Onboarding extends StatefulWidget {
   const Onboarding({super.key});
@@ -20,7 +20,7 @@ class _OnboardingState extends State<Onboarding> {
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const Rootscreen()),
+        MaterialPageRoute(builder: (_) => const RootScreen()),
       );
     });
   }
