@@ -18,7 +18,6 @@ DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
 MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
 logger.info(f"BASE_DIR={BASE_DIR}")
 logger.info(f"DATA_PROCESSED={DATA_PROCESSED}")
-logger.info(f"STATUS CODE={r.status_code}")
 
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
