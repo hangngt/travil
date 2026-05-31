@@ -8,6 +8,7 @@ import os
 from sklearn.preprocessing import normalize
 import logging
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -47,7 +48,6 @@ class ContentService:
     def __init__(self):
         self.df = None
         self.tfidf_vectorizer = None
-        self.item_embeddings = None
         self._loaded = False
 
     def _ensure_loaded(self):
@@ -61,7 +61,6 @@ class ContentService:
             PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
             TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
 
-            # CHỈ DOWNLOAD 2 FILE, KHÔNG DOWNLOAD cosine_sim.npy
             if not download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv"):
                 raise RuntimeError("Failed to download products_clean.csv")
             
@@ -91,21 +90,14 @@ class ContentService:
                 if col in self.df.columns:
                     self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
 
-            # Tạo item embeddings - nhưng không lưu cosine_sim riêng
-            tfidf_matrix = self.tfidf_vectorizer.transform(self.df['combined_text'].fillna(''))
-            self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
-            
-            # Giải phóng memory
-            del tfidf_matrix
-
+            # QUAN TRỌNG: KHÔNG tạo item_embeddings để tiết kiệm RAM
             self._loaded = True
-            logger.info(f"ContentService loaded {len(self.df)} products (embeddings shape: {self.item_embeddings.shape})")
+            logger.info(f"ContentService loaded {len(self.df)} products (no pre-loaded embeddings)")
 
         except Exception as e:
             logger.error(f"Failed to load ContentService: {e}")
             raise
 
-    # Các hàm haversine_distance, calculate_distances_vectorized giữ nguyên
     def haversine_distance(self, lat1, lon1, lat2, lon2):
         R = 6371.0
         lat1_rad = math.radians(lat1)
@@ -197,14 +189,22 @@ class ContentService:
             logger.warning("Không có địa điểm phù hợp, hiển thị gợi ý phổ biến nhất")
             return self.df.nlargest(top_k, 'booked_count')[['product_id', 'title', 'location', 'rating', 'booked_count']]
 
-        # LAYER 2: CONTENT SIMILARITY
+        # LAYER 2: CONTENT SIMILARITY - TÍNH ON-THE-FLY
         if viewed_product_id is not None:
             target_indices = self.df[self.df['product_id'] == viewed_product_id].index
             if len(target_indices) > 0:
                 target_idx = target_indices[0]
-                target_vector = self.item_embeddings[target_idx]
-                similarity_scores = np.dot(self.item_embeddings, target_vector)
-                candidates['similarity_score'] = similarity_scores[candidates.index]
+                # Transform target text
+                target_text = self.df.iloc[target_idx]['combined_text']
+                target_vector = self.tfidf_vectorizer.transform([target_text])
+                
+                # Transform candidate texts
+                candidate_texts = candidates['combined_text'].fillna('').tolist()
+                candidate_vectors = self.tfidf_vectorizer.transform(candidate_texts)
+                
+                # Tính cosine similarity
+                similarities = cosine_similarity(candidate_vectors, target_vector).flatten()
+                candidates['similarity_score'] = similarities
             else:
                 candidates['similarity_score'] = 0.0
         else:
