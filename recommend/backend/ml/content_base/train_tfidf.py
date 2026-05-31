@@ -102,17 +102,25 @@ class ContentService:
     def _load_data(self):
         """Load models từ Latest GitHub Release"""
         BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
-        
+
         PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
-        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
+        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.joblib"
         COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
 
-        # Download
+        # Download FIRST
         download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
-        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
+        
+        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.joblib")
         download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
 
-        # Load data
+        csv_path = DATA_PROCESSED / "products_clean.csv"
+
+        if not csv_path.exists():
+            raise RuntimeError(
+                "products_clean.csv not found - download failed from GitHub Release"
+            )
+
+        # THEN load
         self.df = pd.read_csv(DATA_PROCESSED / "products_clean.csv").reset_index(drop=True)
         
         # with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "rb") as f:
