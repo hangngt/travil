@@ -16,6 +16,9 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 
 DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
 MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
+logger.info(f"BASE_DIR={BASE_DIR}")
+logger.info(f"DATA_PROCESSED={DATA_PROCESSED}")
+logger.info(f"STATUS CODE={r.status_code}")
 
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
@@ -47,7 +50,16 @@ def download_file(url, output_path):
     logger.info(f"Downloading {output_path.name} ...")
 
     try:
-        r = requests.get(url, stream=True, timeout=120)
+        r = requests.get(
+            url,
+            stream=True,
+            timeout=120,
+            allow_redirects=True
+        )
+
+        logger.info(f"URL: {url}")
+        logger.info(f"STATUS CODE: {r.status_code}")
+
         r.raise_for_status()
 
         with open(output_path, "wb") as f:
@@ -59,7 +71,9 @@ def download_file(url, output_path):
         return True
 
     except Exception as e:
-        logger.error(f"Download failed: {e}")
+        logger.exception(
+            f"Download failed: {url}"
+        )
         return False
 
 
@@ -80,8 +94,8 @@ def train_content_model():
         
         cosine_sim = normalize(tfidf_matrix).toarray().astype(np.float32)
 
-        with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "wb") as f:
-            joblib.dump(tfidf, DATA_PROCESSED / "tfidf_vectorizer.joblib")
+        # with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "wb") as f:
+        joblib.dump(tfidf, DATA_PROCESSED / "tfidf_vectorizer.pkl")
         np.save(DATA_PROCESSED / "cosine_sim.npy", cosine_sim)
 
         logger.info(f" Content model trained successfully with {len(df)} products")
@@ -108,10 +122,33 @@ class ContentService:
         COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
 
         # Download FIRST
-        download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
+        # download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
         
-        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.joblib")
-        download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
+        # download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.joblib")
+        # download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
+        if not download_file(
+            PRODUCTS_URL,
+            DATA_PROCESSED / "products_clean.csv"
+        ):
+            raise RuntimeError(
+                f"Cannot download {PRODUCTS_URL}"
+            )
+
+        if not download_file(
+            TFIDF_URL,
+            DATA_PROCESSED / "tfidf_vectorizer.pkl"
+        ):
+            raise RuntimeError(
+                f"Cannot download {TFIDF_URL}"
+            )
+
+        if not download_file(
+            COSINE_URL,
+            DATA_PROCESSED / "cosine_sim.npy"
+        ):
+            raise RuntimeError(
+                f"Cannot download {COSINE_URL}"
+            )
 
         csv_path = DATA_PROCESSED / "products_clean.csv"
 
