@@ -1,66 +1,32 @@
-
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
-from recommend.backend.ml.hybrid.hybrid_service import HybridService
-
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-
     try:
-
-        print("Loading HybridService...")
-
+        print("Initializing HybridService (lazy loading enabled)...")
+        from recommend.backend.ml.hybrid.hybrid_service import HybridService
         app.state.hybrid = HybridService()
-
-        print("HybridService loaded successfully")
-
+        print("HybridService wrapper created (will load on first request)")
     except Exception as e:
-
         import traceback
-
-        print("STARTUP ERROR:", str(e))
+        print(f"STARTUP ERROR: {str(e)}")
         print(traceback.format_exc())
-
         app.state.hybrid = None
-
     yield
-
     print("Server shutting down...")
 
-app = FastAPI( lifespan=lifespan)
-
-# hybrid = None
-# @app.on_event("startup")
-# def load_model():
-#     global hybrid
-#     try:
-#         hybrid = HybridService()
-#     except Exception as e:
-#         import traceback
-#         print(" STARTUP ERROR:", str(e))
-#         print(traceback.format_exc())
-#         hybrid = None   # KHÔNG raise để tránh kill server
-
-
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 def home():
-
     hybrid = app.state.hybrid
-
-    print("HOME CALLED")
-
     return {
         "message": "Travel Recommendation API",
         "status": "running",
-        "model_loaded": hybrid is not None
+        "model_loaded": hybrid is not None and hybrid._initialized
     }
-
-
-
-# RECOMMEND API
 
 @app.get("/recommend")
 def recommend(
@@ -69,26 +35,16 @@ def recommend(
     lat: float = None,
     lng: float = None,
 ):
-
     hybrid = app.state.hybrid
-
-    print(
-        f"RECOMMEND CALLED  "
-        f"city={city}, user_id={user_id}, lat={lat}, lng={lng}"
-    )
+    print(f"RECOMMEND CALLED: city={city}, user_id={user_id}")
 
     if hybrid is None:
-
         return JSONResponse(
             status_code=503,
-            content={
-                "error": "Model not loaded",
-                "hint": "Check server logs for startup error"
-            }
+            content={"error": "Model not loaded", "hint": "Check server logs"}
         )
 
     try:
-
         results = hybrid.recommend(
             user_id=user_id,
             city_name=city,
@@ -96,21 +52,10 @@ def recommend(
             user_lng=lng,
             top_k=10
         )
-
-        print("Recommendation success, rows:", len(results))
-
+        print(f"Recommendation success, rows: {len(results)}")
         return results.to_dict(orient="records")
-
     except Exception as e:
-
         import traceback
-
-        print("ERROR IN RECOMMEND:", str(e))
+        print(f"ERROR: {str(e)}")
         print(traceback.format_exc())
-
-        return JSONResponse(
-            status_code=500,
-            content={
-                "error": str(e)
-            }
-        )
+        return JSONResponse(status_code=500, content={"error": str(e)})
