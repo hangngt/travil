@@ -21,7 +21,7 @@ class HybridService:
         self.pending_ratings = 0
         self.rating_cache = {}
 
-        logger.info("🔄 Loading SVD model from latest release...")
+        logger.info(" Loading SVD model from latest release...")
         self._load_svd_model()
 
     def _load_svd_model(self):

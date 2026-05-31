@@ -1,25 +1,38 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:travil/widget/trip_status_chip.dart';
-import '../../data/model/product_model.dart';
 
-class DetailScreen extends StatelessWidget {
+import '../../data/model/product_model.dart';
+import '../../viewmodel/willgo_viewmodel.dart';
+
+class DetailScreen extends StatefulWidget {
   final ProductModel product;
 
   const DetailScreen({super.key, required this.product});
+
+  @override
+  State<DetailScreen> createState() => _DetailScreenState();
+}
+
+class _DetailScreenState extends State<DetailScreen> {
+  GoogleMapController? mapController;
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
-          // App Bar with Image
+          // App Bar với hình ảnh
           SliverAppBar(
             expandedHeight: 280,
             pinned: true,
             flexibleSpace: FlexibleSpaceBar(
-              background: Image.network(product.imageUrl, fit: BoxFit.cover),
+              background: Image.network(
+                widget.product.imageUrl,
+                fit: BoxFit.cover,
+              ),
             ),
           ),
 
@@ -29,19 +42,20 @@ class DetailScreen extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title & Rating
                   Text(
-                    product.title,
+                    widget.product.title,
                     style: const TextStyle(
                       fontSize: 26,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 8),
+
+                  // Rating
                   Row(
                     children: [
                       RatingBarIndicator(
-                        rating: product.rating,
+                        rating: widget.product.rating,
                         itemBuilder:
                             (context, index) =>
                                 const Icon(Icons.star, color: Colors.amber),
@@ -50,25 +64,18 @@ class DetailScreen extends StatelessWidget {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        "${product.rating} • ${product.reviewCount} reviews",
-                        style: const TextStyle(fontSize: 16),
+                        "${widget.product.rating} • ${widget.product.reviewCount} reviews",
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
 
-                  // Location & Price
+                  const SizedBox(height: 12),
                   Row(
                     children: [
                       const Icon(Icons.location_on, color: Colors.red),
-                      Expanded(
-                        child: Text(
-                          product.location,
-                          style: const TextStyle(fontSize: 16),
-                        ),
-                      ),
+                      Expanded(child: Text(widget.product.location)),
                       Text(
-                        "\$${product.price}",
+                        "\$${widget.product.price}",
                         style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
@@ -80,33 +87,46 @@ class DetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 20),
                   Text(
-                    product.description,
-                    style: const TextStyle(fontSize: 16, height: 1.5),
+                    widget.product.description,
+                    style: const TextStyle(fontSize: 16, height: 1.6),
                   ),
 
                   const SizedBox(height: 24),
 
-                  // Map
+                  // Google Maps
                   const Text(
-                    "Location",
+                    "Vị trí",
                     style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(height: 12),
                   SizedBox(
-                    height: 220,
+                    height: 240,
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: GoogleMap(
                         initialCameraPosition: CameraPosition(
-                          target: LatLng(product.lat, product.lng),
-                          zoom: 14,
+                          target: LatLng(
+                            widget.product.lat,
+                            widget.product.lng,
+                          ),
+                          zoom: 15,
                         ),
                         markers: {
                           Marker(
-                            markerId: MarkerId(product.productId.toString()),
-                            position: LatLng(product.lat, product.lng),
-                            infoWindow: InfoWindow(title: product.title),
+                            markerId: const MarkerId('product_location'),
+                            position: LatLng(
+                              widget.product.lat,
+                              widget.product.lng,
+                            ),
+                            infoWindow: InfoWindow(
+                              title: widget.product.title,
+                              snippet: widget.product.location,
+                            ),
                           ),
+                        },
+                        mapType: MapType.normal,
+                        onMapCreated: (GoogleMapController controller) {
+                          mapController = controller;
                         },
                       ),
                     ),
@@ -114,15 +134,31 @@ class DetailScreen extends StatelessWidget {
 
                   const SizedBox(height: 30),
 
-                  // Trip Status (3 trạng thái)
-                  const Text(
-                    "Your Plan",
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  // Nút Will Go
+                  ElevatedButton.icon(
+                    onPressed: () {
+                      context.read<WillGoViewModel>().addToWillGo(
+                        "current_user_uid", // Thay bằng uid thật sau
+                        widget.product,
+                      );
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text("Đã thêm vào danh sách Will Go!"),
+                        ),
+                      );
+                    },
+                    icon: const Icon(Icons.bookmark_add),
+                    label: const Text("Thêm vào Will Go"),
+                    style: ElevatedButton.styleFrom(
+                      minimumSize: const Size(double.infinity, 52),
+                      backgroundColor: Colors.blue,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  TripStatusChip(productId: product.productId),
 
-                  const SizedBox(height: 40),
+                  const SizedBox(height: 16),
+
+                  // Trạng thái chuyến đi
+                  TripStatusChip(productId: widget.product.productId),
                 ],
               ),
             ),

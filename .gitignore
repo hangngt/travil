@@ -62,3 +62,12 @@ Thumbs.db
 
 .flutter-plugins
 .flutter-plugins-dependencies
+
+# Flutter generated
+.dart_tool/
+build/
+*.log
+android/.kotlin/
+linux/flutter/generated_*
+windows/flutter/generated_*
+macos/Flutter/GeneratedPluginRegistrant.*

@@ -9,11 +9,18 @@ class ProductRepository {
     double? lat,
     double? lng,
   }) async {
+    final params = <String, dynamic>{};
+
+    if (city != null) params['city'] = city;
+    if (lat != null) params['lat'] = lat;
+    if (lng != null) params['lng'] = lng;
+
     final data = await _apiService.getRecommendations(
-      city: city,
-      lat: lat,
-      lng: lng,
+      city: params['city'],
+      lat: params['lat'],
+      lng: params['lng'],
     );
+
     return data.map((e) => ProductModel.fromJson(e)).toList();
   }
 }

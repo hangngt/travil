@@ -8,12 +8,20 @@ import 'viewmodel/calendar_viewmodel.dart';
 import 'viewmodel/stats_viewmodel.dart';
 import 'viewmodel/willgo_viewmodel.dart';
 import 'views/rootscreen.dart';
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+
+  print("STEP 1");
+
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  print("STEP 2");
 
   runApp(const MyApp());
+
+  print("STEP 3");
 }
 
 class MyApp extends StatelessWidget {
@@ -23,11 +31,12 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
-        ChangeNotifierProvider(create: (_) => CalendarViewModel()),
-        ChangeNotifierProvider(create: (_) => StatsViewModel()),
-        ChangeNotifierProvider(create: (_) => WillGoViewModel()),
+        //  lazy init để tránh block startup
+        ChangeNotifierProvider(create: (_) => AuthService(), lazy: true),
+        ChangeNotifierProvider(create: (_) => HomeViewModel(), lazy: true),
+        ChangeNotifierProvider(create: (_) => CalendarViewModel(), lazy: true),
+        ChangeNotifierProvider(create: (_) => StatsViewModel(), lazy: true),
+        ChangeNotifierProvider(create: (_) => WillGoViewModel(), lazy: true),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

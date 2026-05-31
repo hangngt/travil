@@ -12,9 +12,10 @@ class RootScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final auth = context.watch<AuthService>();
 
-    if (auth.currentUser == null) {
+    if (auth.user == null) {
       return const LoginScreen();
     }
+
     return const MainNavigation();
   }
 }

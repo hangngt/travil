@@ -14,15 +14,28 @@ class ApiService {
     double? lng,
     String? userId,
   }) async {
-    final response = await dio.get(
-      '/recommend',
-      queryParameters: {
-        'city': city,
-        'lat': lat,
-        'lng': lng,
-        'user_id': userId,
-      },
-    );
-    return response.data;
+    try {
+      final params = <String, dynamic>{};
+
+      if (city != null) params['city'] = city;
+      if (lat != null) params['lat'] = lat;
+      if (lng != null) params['lng'] = lng;
+      if (userId != null) params['user_id'] = userId;
+
+      print('PARAMS CLEAN: $params');
+
+      final response = await dio.get(
+        '/recommend',
+        queryParameters: params,
+      );
+
+      print('SUCCESS: ${response.data}');
+      return response.data;
+    } on DioException catch (e) {
+      print('STATUS: ${e.response?.statusCode}');
+      print('URI: ${e.requestOptions.uri}');
+      print('DATA: ${e.response?.data}');
+      throw Exception(e.response?.data ?? e.message);
+    }
   }
 }
