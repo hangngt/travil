@@ -1,8 +1,8 @@
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import joblib
 import requests
-import pickle
 import math
 import os
 from sklearn.preprocessing import normalize
@@ -20,25 +20,46 @@ MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
-
+# def download_file(url, output_path):
+#     """Download với hỗ trợ latest release"""
+#     if os.path.exists(output_path):
+#         logger.info(f" Using cached: {output_path.name}")
+#         return True
+    
+#     logger.info(f" Downloading {output_path.name} from latest release...")
+#     try:
+#         response = requests.get(url, timeout=60)
+#         response.raise_for_status()
+        
+#         with open(output_path, "wb") as f:
+#             f.write(response.content)
+#         logger.info(f" Downloaded: {output_path.name}")
+#         return True
+#     except Exception as e:
+#         logger.error(f" Download failed: {e}")
+#         return False
 
 def download_file(url, output_path):
-    """Download với hỗ trợ cache"""
     if os.path.exists(output_path):
-        logger.info(f" Using cached: {output_path.name}")
+        logger.info(f"Using cached: {output_path.name}")
         return True
-    
-    logger.info(f" Downloading {output_path.name} ...")
+
+    logger.info(f"Downloading {output_path.name} ...")
+
     try:
-        response = requests.get(url, timeout=60)
-        response.raise_for_status()
-        
+        r = requests.get(url, stream=True, timeout=120)
+        r.raise_for_status()
+
         with open(output_path, "wb") as f:
-            f.write(response.content)
-        logger.info(f" Downloaded successfully: {output_path.name}")
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    f.write(chunk)
+
+        logger.info(f"Downloaded: {output_path.name}")
         return True
+
     except Exception as e:
-        logger.error(f" Download failed: {e}")
+        logger.error(f"Download failed: {e}")
         return False
 
 
@@ -60,7 +81,7 @@ def train_content_model():
         cosine_sim = normalize(tfidf_matrix).toarray().astype(np.float32)
 
         with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "wb") as f:
-            pickle.dump(tfidf, f)
+            joblib.dump(tfidf, DATA_PROCESSED / "tfidf_vectorizer.joblib")
         np.save(DATA_PROCESSED / "cosine_sim.npy", cosine_sim)
 
         logger.info(f" Content model trained successfully with {len(df)} products")
@@ -79,38 +100,26 @@ class ContentService:
         self._load_data()
 
     def _load_data(self):
-        """Load models từ Google Drive"""
-        #  GOOGLE DRIVE LINK 
-        PRODUCTS_URL = "https://drive.google.com/uc?export=download&id=1tB_ZRB6wBSYuyIUleUI1G5xPZJ7W2NMY"
+        """Load models từ Latest GitHub Release"""
+        BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
         
-        TFIDF_URL = "https://drive.google.com/uc?export=download&id=1u9xvX0UaJcEhAb7PFYCigP0doTzvYLwE"   
-        COSINE_URL = "https://drive.google.com/uc?export=download&id=1P5CoI4KYuFS-tXS5rV1KGi4GPpFHlNTq"  
+        PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
+        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
+        COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
 
-        # Download files
+        # Download
         download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
-        
-        if TFIDF_URL:
-            download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
-        if COSINE_URL:
-            download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
+        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
+        download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
 
         # Load data
         self.df = pd.read_csv(DATA_PROCESSED / "products_clean.csv").reset_index(drop=True)
         
-        # Load tfidf nếu có file
-        tfidf_path = DATA_PROCESSED / "tfidf_vectorizer.pkl"
-        if tfidf_path.exists():
-            with open(tfidf_path, "rb") as f:
-                  self.tfidf_vectorizer = pickle.load(f)
-        else:
-            logger.warning("TF-IDF vectorizer not found, will use fallback")
-
-        # Load cosine similarity nếu có
-        cosine_path = DATA_PROCESSED / "cosine_sim.npy"
-        if cosine_path.exists():
-            self.cosine_sim = np.load(cosine_path)
-        else:
-            self.cosine_sim = None
+        # with open(DATA_PROCESSED / "tfidf_vectorizer.pkl", "rb") as f:
+        #     self.tfidf_vectorizer = pickle.load(f)
+        self.tfidf_vectorizer = joblib.load(DATA_PROCESSED / "tfidf_vectorizer.pkl")
+        
+        self.cosine_sim = np.load(DATA_PROCESSED / "cosine_sim.npy")
 
         # Fix numeric columns
         numeric_cols = ['rating', 'booked_count', 'review_count', 'lat', 'lng']
@@ -118,13 +127,10 @@ class ContentService:
             self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
 
         # Create item embeddings
-        if self.tfidf_vectorizer is not None:
-            tfidf_matrix = self.tfidf_vectorizer.transform(self.df['combined_text'].fillna(''))
-            self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
-        else:
-            self.item_embeddings = np.zeros((len(self.df), 100))  # fallback
+        tfidf_matrix = self.tfidf_vectorizer.transform(self.df['combined_text'].fillna(''))
+        self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
 
-        logger.info(f" ContentService loaded {len(self.df)} products successfully")
+        logger.info(f" ContentService loaded {len(self.df)} products from latest release")
 
     #HAVERSINE DISTANCE
     def haversine_distance(self, lat1, lon1, lat2, lon2):
