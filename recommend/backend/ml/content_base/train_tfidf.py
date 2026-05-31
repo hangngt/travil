@@ -16,8 +16,6 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 
 DATA_PROCESSED = BASE_DIR /"recommend"/"backend"/ "data" / "processed"
 MODEL_DIR = BASE_DIR /"recommend"/"backend" / "ml" / "model"
-logger.info(f"BASE_DIR={BASE_DIR}")
-logger.info(f"DATA_PROCESSED={DATA_PROCESSED}")
 
 # tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
@@ -49,16 +47,7 @@ def download_file(url, output_path):
     logger.info(f"Downloading {output_path.name} ...")
 
     try:
-        r = requests.get(
-            url,
-            stream=True,
-            timeout=120,
-            allow_redirects=True
-        )
-
-        logger.info(f"URL: {url}")
-        logger.info(f"STATUS CODE: {r.status_code}")
-
+        r = requests.get(url, stream=True, timeout=120)
         r.raise_for_status()
 
         with open(output_path, "wb") as f:
@@ -67,14 +56,10 @@ def download_file(url, output_path):
                     f.write(chunk)
 
         logger.info(f"Downloaded: {output_path.name}")
-        logger.info(f"Saved to {output_path}")
-        logger.info(f"Exists = {os.path.exists(output_path)}")
         return True
 
     except Exception as e:
-        logger.exception(
-            f"Download failed: {url}"
-        )
+        logger.error(f"Download failed: {e}")
         return False
 
 
@@ -116,44 +101,17 @@ class ContentService:
 
     def _load_data(self):
         """Load models từ Latest GitHub Release"""
-        # BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
+        BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
 
-        # PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
-        # TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.joblib"
-        # COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
-        PRODUCTS_URL = "https://github.com/hangngt/travil/releases/latest/download/products_clean.csv"
-
-        TFIDF_URL = "https://github.com/hangngt/travil/releases/latest/download/tfidf_vectorizer.joblib"
-        COSINE_URL = "https://github.com/hangngt/travil/releases/latest/download/cosine_sim.npy"
+        PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
+        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
+        COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
 
         # Download FIRST
-        # download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
+        download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
         
-        # download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.joblib")
-        # download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
-        if not download_file(
-            PRODUCTS_URL,
-            DATA_PROCESSED / "products_clean.csv"
-        ):
-            raise RuntimeError(
-                f"Cannot download {PRODUCTS_URL}"
-            )
-
-        if not download_file(
-            TFIDF_URL,
-            DATA_PROCESSED / "tfidf_vectorizer.pkl"
-        ):
-            raise RuntimeError(
-                f"Cannot download {TFIDF_URL}"
-            )
-
-        if not download_file(
-            COSINE_URL,
-            DATA_PROCESSED / "cosine_sim.npy"
-        ):
-            raise RuntimeError(
-                f"Cannot download {COSINE_URL}"
-            )
+        download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl")
+        download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy")
 
         csv_path = DATA_PROCESSED / "products_clean.csv"
 

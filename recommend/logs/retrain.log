@@ -428,3 +428,146 @@
 2026-05-31 14:21:47,835 | INFO |  FULL RETRAIN HOÀN TẤT!
 2026-05-31 14:21:47,835 | INFO |    Thời gian: 0.9 phút
 2026-05-31 14:21:47,835 | INFO |    Hoàn thành lúc: 2026-05-31 14:21:47
+2026-05-31 23:33:02,499 | INFO | BẮT ĐẦU FULL RETRAIN - 2026-05-31 23:33:02
+2026-05-31 23:33:02,499 | INFO |  Step 1: Syncing data from Firestore...
+2026-05-31 23:33:02,510 | ERROR |  Firebase connection failed: [Errno 2] No such file or directory: 'firebase/service_account.json'
+2026-05-31 23:33:02,510 | WARNING |  Firestore sync failed (using local data): [Errno 2] No such file or directory: 'firebase/service_account.json'
+2026-05-31 23:33:02,510 | INFO |  Step 2: Training Content-based Model (TF-IDF)...
+2026-05-31 23:33:02,510 | INFO |  Training Content-based model...
+2026-05-31 23:33:03,950 | INFO |  Content model trained successfully with 9886 products
+2026-05-31 23:33:03,975 | INFO |  Content model trained successfully
+2026-05-31 23:33:03,975 | INFO |  Step 3: Training Collaborative Model (SVD)...
+2026-05-31 23:33:03,975 | INFO |  Bắt đầu train SVD Model...
+2026-05-31 23:33:04,037 | INFO | Users: 11684 | Items: 564 | Ratings: 26515
+2026-05-31 23:33:04,399 | INFO | --- Fold 1/5 ---
+2026-05-31 23:33:04,600 | INFO | Epoch  1/30 | Train RMSE: 3.0978 | Val RMSE: 4.4605
+2026-05-31 23:33:05,496 | INFO | Epoch  6/30 | Train RMSE: 2.5776 | Val RMSE: 4.3706
+2026-05-31 23:33:06,359 | INFO | Epoch 11/30 | Train RMSE: 1.9547 | Val RMSE: 4.2612
+2026-05-31 23:33:07,219 | INFO | Epoch 16/30 | Train RMSE: 1.5005 | Val RMSE: 4.1794
+2026-05-31 23:33:08,101 | INFO | Epoch 21/30 | Train RMSE: 1.1989 | Val RMSE: 4.1256
+2026-05-31 23:33:08,993 | INFO | Epoch 26/30 | Train RMSE: 0.9908 | Val RMSE: 4.0915
+2026-05-31 23:33:09,744 | INFO | Epoch 30/30 | Train RMSE: 0.8773 | Val RMSE: 4.0738
+2026-05-31 23:33:09,753 | INFO | --- Fold 2/5 ---
+2026-05-31 23:33:10,087 | INFO | Epoch  1/30 | Train RMSE: 3.9156 | Val RMSE: 3.6234
+2026-05-31 23:33:11,847 | INFO | Epoch  6/30 | Train RMSE: 3.5512 | Val RMSE: 3.2162
+2026-05-31 23:33:13,615 | INFO | Epoch 11/30 | Train RMSE: 2.7476 | Val RMSE: 2.5625
+2026-05-31 23:33:15,437 | INFO | Epoch 16/30 | Train RMSE: 1.8516 | Val RMSE: 2.0036
+2026-05-31 23:33:17,187 | INFO | Epoch 21/30 | Train RMSE: 1.2400 | Val RMSE: 1.6702
+2026-05-31 23:33:18,771 | INFO | Epoch 26/30 | Train RMSE: 0.8845 | Val RMSE: 1.5095
+2026-05-31 23:33:20,174 | INFO | Epoch 30/30 | Train RMSE: 0.7127 | Val RMSE: 1.4336
+2026-05-31 23:33:20,178 | INFO | --- Fold 3/5 ---
+2026-05-31 23:33:20,560 | INFO | Epoch  1/30 | Train RMSE: 3.9623 | Val RMSE: 3.0870
+2026-05-31 23:33:22,405 | INFO | Epoch  6/30 | Train RMSE: 3.5877 | Val RMSE: 2.5016
+2026-05-31 23:33:24,274 | INFO | Epoch 11/30 | Train RMSE: 2.6535 | Val RMSE: 1.6710
+2026-05-31 23:33:26,336 | INFO | Epoch 16/30 | Train RMSE: 1.6959 | Val RMSE: 1.2606
+2026-05-31 23:33:28,142 | INFO | Epoch 21/30 | Train RMSE: 1.1210 | Val RMSE: 1.1085
+2026-05-31 23:33:30,016 | INFO | Epoch 26/30 | Train RMSE: 0.8096 | Val RMSE: 1.0382
+2026-05-31 23:33:31,510 | INFO | Epoch 30/30 | Train RMSE: 0.6761 | Val RMSE: 1.0092
+2026-05-31 23:33:31,517 | INFO | --- Fold 4/5 ---
+2026-05-31 23:33:31,950 | INFO | Epoch  1/30 | Train RMSE: 3.9750 | Val RMSE: 2.7680
+2026-05-31 23:33:33,721 | INFO | Epoch  6/30 | Train RMSE: 3.5603 | Val RMSE: 2.0466
+2026-05-31 23:33:35,527 | INFO | Epoch 11/30 | Train RMSE: 2.5751 | Val RMSE: 1.2931
+2026-05-31 23:33:37,323 | INFO | Epoch 16/30 | Train RMSE: 1.6603 | Val RMSE: 1.0741
+2026-05-31 23:33:39,245 | INFO | Epoch 21/30 | Train RMSE: 1.1090 | Val RMSE: 0.9999
+2026-05-31 23:33:41,006 | INFO | Epoch 26/30 | Train RMSE: 0.8003 | Val RMSE: 0.9546
+2026-05-31 23:33:42,623 | INFO | Epoch 30/30 | Train RMSE: 0.6685 | Val RMSE: 0.9508
+2026-05-31 23:33:42,624 | INFO | --- Fold 5/5 ---
+2026-05-31 23:33:42,982 | INFO | Epoch  1/30 | Train RMSE: 3.9843 | Val RMSE: 2.5751
+2026-05-31 23:33:44,786 | INFO | Epoch  6/30 | Train RMSE: 3.5601 | Val RMSE: 1.7955
+2026-05-31 23:33:46,523 | INFO | Epoch 11/30 | Train RMSE: 2.5586 | Val RMSE: 1.1407
+2026-05-31 23:33:48,312 | INFO | Epoch 16/30 | Train RMSE: 1.6488 | Val RMSE: 1.0398
+2026-05-31 23:33:50,051 | INFO | Epoch 21/30 | Train RMSE: 1.1082 | Val RMSE: 0.9960
+2026-05-31 23:33:51,861 | INFO | Epoch 26/30 | Train RMSE: 0.7930 | Val RMSE: 0.9374
+2026-05-31 23:33:53,242 | INFO | Epoch 30/30 | Train RMSE: 0.6549 | Val RMSE: 0.9120
+2026-05-31 23:33:53,262 | INFO |  SVD Model trained successfully! Best Val RMSE: 0.9120
+2026-05-31 23:33:53,263 | INFO |  SVD model trained successfully
+2026-05-31 23:33:53,263 | INFO |  Step 4: Uploading models to GitHub Release...
+2026-05-31 23:33:53,265 | INFO |  Đang tạo GitHub Release với tag: v1.20260531_2333
+2026-05-31 23:33:53,266 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\products_clean.csv
+2026-05-31 23:33:53,266 | INFO |  products_clean.csv | 4.32 MB
+2026-05-31 23:33:53,267 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\tfidf_vectorizer.pkl
+2026-05-31 23:33:53,267 | INFO |  tfidf_vectorizer.pkl | 0.00 MB
+2026-05-31 23:33:53,267 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\cosine_sim.npy
+2026-05-31 23:33:53,268 | INFO |  cosine_sim.npy | 188.56 MB
+2026-05-31 23:33:53,268 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\ml\model\svd_model.pkl
+2026-05-31 23:33:53,269 | INFO |  svd_model.pkl | 1.79 MB
+2026-05-31 23:33:53,508 | INFO |  Đang upload models lên GitHub Release...
+2026-05-31 23:33:53,508 | INFO |  Working dir: E:\multiproject\multiplatform\travil
+2026-05-31 23:33:56,112 | ERROR |  GitHub Release failed
+2026-05-31 23:33:56,112 | ERROR | HTTP 400: Bad Content-Length (https://uploads.github.com/repos/hangngt/travil/releases/332166356/assets?label=&name=tfidf_vectorizer.pkl)
+
+2026-05-31 23:33:56,113 | WARNING |  Failed to push to GitHub Release
+2026-05-31 23:33:56,113 | INFO |  FULL RETRAIN HOÀN TẤT!
+2026-05-31 23:33:56,113 | INFO |    Thời gian: 0.9 phút
+2026-05-31 23:33:56,113 | INFO |    Hoàn thành lúc: 2026-05-31 23:33:56
+2026-05-31 23:53:34,019 | INFO | BẮT ĐẦU FULL RETRAIN - 2026-05-31 23:53:34
+2026-05-31 23:53:34,021 | INFO |  Step 1: Syncing data from Firestore...
+2026-05-31 23:53:34,022 | ERROR |  Firebase connection failed: [Errno 2] No such file or directory: 'firebase/service_account.json'
+2026-05-31 23:53:34,022 | WARNING |  Firestore sync failed (using local data): [Errno 2] No such file or directory: 'firebase/service_account.json'
+2026-05-31 23:53:34,022 | INFO |  Step 2: Training Content-based Model (TF-IDF)...
+2026-05-31 23:53:34,023 | INFO |  Training Content-based model...
+2026-05-31 23:53:36,052 | INFO |  Content model trained successfully with 9886 products
+2026-05-31 23:53:36,080 | INFO |  Content model trained successfully
+2026-05-31 23:53:36,081 | INFO |  Step 3: Training Collaborative Model (SVD)...
+2026-05-31 23:53:36,081 | INFO |  Bắt đầu train SVD Model...
+2026-05-31 23:53:36,140 | INFO | Users: 11684 | Items: 564 | Ratings: 26515
+2026-05-31 23:53:36,519 | INFO | --- Fold 1/5 ---
+2026-05-31 23:53:36,714 | INFO | Epoch  1/30 | Train RMSE: 3.0978 | Val RMSE: 4.4605
+2026-05-31 23:53:37,608 | INFO | Epoch  6/30 | Train RMSE: 2.5776 | Val RMSE: 4.3706
+2026-05-31 23:53:38,513 | INFO | Epoch 11/30 | Train RMSE: 1.9547 | Val RMSE: 4.2612
+2026-05-31 23:53:39,443 | INFO | Epoch 16/30 | Train RMSE: 1.5005 | Val RMSE: 4.1794
+2026-05-31 23:53:40,334 | INFO | Epoch 21/30 | Train RMSE: 1.1989 | Val RMSE: 4.1256
+2026-05-31 23:53:41,234 | INFO | Epoch 26/30 | Train RMSE: 0.9908 | Val RMSE: 4.0915
+2026-05-31 23:53:41,950 | INFO | Epoch 30/30 | Train RMSE: 0.8773 | Val RMSE: 4.0738
+2026-05-31 23:53:41,954 | INFO | --- Fold 2/5 ---
+2026-05-31 23:53:42,280 | INFO | Epoch  1/30 | Train RMSE: 3.9156 | Val RMSE: 3.6234
+2026-05-31 23:53:43,856 | INFO | Epoch  6/30 | Train RMSE: 3.5512 | Val RMSE: 3.2162
+2026-05-31 23:53:45,543 | INFO | Epoch 11/30 | Train RMSE: 2.7476 | Val RMSE: 2.5625
+2026-05-31 23:53:47,131 | INFO | Epoch 16/30 | Train RMSE: 1.8516 | Val RMSE: 2.0036
+2026-05-31 23:53:48,701 | INFO | Epoch 21/30 | Train RMSE: 1.2400 | Val RMSE: 1.6702
+2026-05-31 23:53:50,267 | INFO | Epoch 26/30 | Train RMSE: 0.8845 | Val RMSE: 1.5095
+2026-05-31 23:53:51,526 | INFO | Epoch 30/30 | Train RMSE: 0.7127 | Val RMSE: 1.4336
+2026-05-31 23:53:51,527 | INFO | --- Fold 3/5 ---
+2026-05-31 23:53:51,865 | INFO | Epoch  1/30 | Train RMSE: 3.9623 | Val RMSE: 3.0870
+2026-05-31 23:53:53,524 | INFO | Epoch  6/30 | Train RMSE: 3.5877 | Val RMSE: 2.5016
+2026-05-31 23:53:55,178 | INFO | Epoch 11/30 | Train RMSE: 2.6535 | Val RMSE: 1.6710
+2026-05-31 23:53:56,827 | INFO | Epoch 16/30 | Train RMSE: 1.6959 | Val RMSE: 1.2606
+2026-05-31 23:53:58,468 | INFO | Epoch 21/30 | Train RMSE: 1.1210 | Val RMSE: 1.1085
+2026-05-31 23:54:00,113 | INFO | Epoch 26/30 | Train RMSE: 0.8096 | Val RMSE: 1.0382
+2026-05-31 23:54:01,469 | INFO | Epoch 30/30 | Train RMSE: 0.6761 | Val RMSE: 1.0092
+2026-05-31 23:54:01,471 | INFO | --- Fold 4/5 ---
+2026-05-31 23:54:01,826 | INFO | Epoch  1/30 | Train RMSE: 3.9750 | Val RMSE: 2.7680
+2026-05-31 23:54:03,499 | INFO | Epoch  6/30 | Train RMSE: 3.5603 | Val RMSE: 2.0466
+2026-05-31 23:54:05,176 | INFO | Epoch 11/30 | Train RMSE: 2.5751 | Val RMSE: 1.2931
+2026-05-31 23:54:06,857 | INFO | Epoch 16/30 | Train RMSE: 1.6603 | Val RMSE: 1.0741
+2026-05-31 23:54:08,547 | INFO | Epoch 21/30 | Train RMSE: 1.1090 | Val RMSE: 0.9999
+2026-05-31 23:54:10,224 | INFO | Epoch 26/30 | Train RMSE: 0.8003 | Val RMSE: 0.9546
+2026-05-31 23:54:11,566 | INFO | Epoch 30/30 | Train RMSE: 0.6685 | Val RMSE: 0.9508
+2026-05-31 23:54:11,568 | INFO | --- Fold 5/5 ---
+2026-05-31 23:54:11,919 | INFO | Epoch  1/30 | Train RMSE: 3.9843 | Val RMSE: 2.5751
+2026-05-31 23:54:13,609 | INFO | Epoch  6/30 | Train RMSE: 3.5601 | Val RMSE: 1.7955
+2026-05-31 23:54:15,323 | INFO | Epoch 11/30 | Train RMSE: 2.5586 | Val RMSE: 1.1407
+2026-05-31 23:54:17,037 | INFO | Epoch 16/30 | Train RMSE: 1.6488 | Val RMSE: 1.0398
+2026-05-31 23:54:18,752 | INFO | Epoch 21/30 | Train RMSE: 1.1082 | Val RMSE: 0.9960
+2026-05-31 23:54:20,446 | INFO | Epoch 26/30 | Train RMSE: 0.7930 | Val RMSE: 0.9374
+2026-05-31 23:54:21,797 | INFO | Epoch 30/30 | Train RMSE: 0.6549 | Val RMSE: 0.9120
+2026-05-31 23:54:21,809 | INFO |  SVD Model trained successfully! Best Val RMSE: 0.9120
+2026-05-31 23:54:21,810 | INFO |  SVD model trained successfully
+2026-05-31 23:54:21,811 | INFO |  Step 4: Uploading models to GitHub Release...
+2026-05-31 23:54:21,812 | INFO |  Đang tạo GitHub Release với tag: v1.20260531_2354
+2026-05-31 23:54:21,812 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\products_clean.csv
+2026-05-31 23:54:21,814 | INFO |  products_clean.csv | 4.32 MB
+2026-05-31 23:54:21,814 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\tfidf_vectorizer.pkl
+2026-05-31 23:54:21,814 | INFO |  tfidf_vectorizer.pkl | 0.17 MB
+2026-05-31 23:54:21,814 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\data\processed\cosine_sim.npy
+2026-05-31 23:54:21,814 | INFO |  cosine_sim.npy | 188.56 MB
+2026-05-31 23:54:21,814 | INFO |  Checking: E:\multiproject\multiplatform\travil\recommend\backend\ml\model\svd_model.pkl
+2026-05-31 23:54:21,815 | INFO |  svd_model.pkl | 1.79 MB
+2026-05-31 23:54:21,929 | INFO |  Đang upload models lên GitHub Release...
+2026-05-31 23:54:21,929 | INFO |  Working dir: E:\multiproject\multiplatform\travil
+2026-05-31 23:55:42,036 | INFO |  Upload thành công!
+2026-05-31 23:55:42,036 | INFO | https://github.com/hangngt/travil/releases/tag/v1.20260531_2354
+2026-05-31 23:55:42,036 | INFO |  Successfully created GitHub Release: v1.20260531_2354
+2026-05-31 23:55:42,037 | INFO |  FULL RETRAIN HOÀN TẤT!
+2026-05-31 23:55:42,037 | INFO |    Thời gian: 2.1 phút
+2026-05-31 23:55:42,037 | INFO |    Hoàn thành lúc: 2026-05-31 23:55:42

@@ -1,6 +1,8 @@
 from fastapi import APIRouter, BackgroundTasks
 from recommend.backend.ml.hybrid.hybrid_service import HybridService
 
+from recommend.backend.task.retrain import full_retrain
+
 router = APIRouter()
 hybrid = HybridService()
 
@@ -16,7 +18,7 @@ async def add_user_rating(data: dict, background_tasks: BackgroundTasks):
         
         # Trigger retrain background nếu cần
         if hybrid.pending_ratings >= 1000:
-            background_tasks.add_task(full_retrain_background)
+            background_tasks.add_task(full_retrain)
     
     return {"status": "success"}
 
