@@ -67,6 +67,8 @@ def download_file(url, output_path):
                     f.write(chunk)
 
         logger.info(f"Downloaded: {output_path.name}")
+        logger.info(f"Saved to {output_path}")
+        logger.info(f"Exists = {os.path.exists(output_path)}")
         return True
 
     except Exception as e:
@@ -114,11 +116,15 @@ class ContentService:
 
     def _load_data(self):
         """Load models từ Latest GitHub Release"""
-        BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
+        # BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
 
-        PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
-        TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.joblib"
-        COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
+        # PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
+        # TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.joblib"
+        # COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
+        PRODUCTS_URL = "https://github.com/hangngt/travil/releases/latest/download/products_clean.csv"
+
+        TFIDF_URL = "https://github.com/hangngt/travil/releases/latest/download/tfidf_vectorizer.joblib"
+        COSINE_URL = "https://github.com/hangngt/travil/releases/latest/download/cosine_sim.npy"
 
         # Download FIRST
         # download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv")
