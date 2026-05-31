@@ -101,7 +101,7 @@ class ContentService:
         tfidf_path = DATA_PROCESSED / "tfidf_vectorizer.pkl"
         if tfidf_path.exists():
             with open(tfidf_path, "rb") as f:
-                self.tfidf_vectorizer = pickle.load(f)
+                  self.tfidf_vectorizer = pickle.load(f)
         else:
             logger.warning("TF-IDF vectorizer not found, will use fallback")
 
