@@ -19,13 +19,28 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
+# THÊM HEAD HANDLER CHO HEALTH CHECK
+@app.head("/")
+async def head_root():
+    """HEAD request handler for Render health checks"""
+    return JSONResponse(content={}, status_code=200)
+
 @app.get("/")
 def home():
     hybrid = app.state.hybrid
     return {
         "message": "Travel Recommendation API",
         "status": "running",
-        "model_loaded": hybrid is not None and hybrid._initialized
+        "model_loaded": hybrid is not None and hybrid._initialized if hybrid else False
+    }
+
+@app.get("/health")
+def health():
+    """Health check endpoint"""
+    hybrid = app.state.hybrid
+    return {
+        "status": "healthy",
+        "model_ready": hybrid is not None and hybrid._initialized if hybrid else False
     }
 
 @app.get("/recommend")

@@ -17,19 +17,16 @@ BASE_DIR = Path(__file__).resolve().parents[4]
 DATA_PROCESSED = BASE_DIR / "recommend" / "backend" / "data" / "processed"
 MODEL_DIR = BASE_DIR / "recommend" / "backend" / "ml" / "model"
 
-# tạo folder nếu chưa có
 os.makedirs(DATA_PROCESSED, exist_ok=True)
 os.makedirs(MODEL_DIR, exist_ok=True)
 
 
 def download_file(url, output_path):
-    """Download với hỗ trợ latest release"""
     if os.path.exists(output_path):
         logger.info(f"Using cached: {output_path.name}")
         return True
 
     logger.info(f"Downloading {output_path.name} ...")
-
     try:
         r = requests.get(url, stream=True, timeout=120)
         r.raise_for_status()
@@ -41,36 +38,8 @@ def download_file(url, output_path):
 
         logger.info(f"Downloaded: {output_path.name}")
         return True
-
     except Exception as e:
         logger.error(f"Download failed: {e}")
-        return False
-
-
-def train_content_model():
-    """Train TF-IDF + Cosine Similarity"""
-    logger.info("Training Content-based model...")
-    try:
-        df = pd.read_csv(DATA_PROCESSED / "products_clean.csv")
-
-        df['combined_text'] = (
-            df['title'].fillna('') + " " +
-            df.get('description', '').fillna('') + " " +
-            df['location'].fillna('')
-        )
-
-        tfidf = TfidfVectorizer(max_features=5000, stop_words='english', ngram_range=(1, 2))
-        tfidf_matrix = tfidf.fit_transform(df['combined_text'])
-
-        cosine_sim = normalize(tfidf_matrix).toarray().astype(np.float32)
-
-        joblib.dump(tfidf, DATA_PROCESSED / "tfidf_vectorizer.pkl")
-        np.save(DATA_PROCESSED / "cosine_sim.npy", cosine_sim)
-
-        logger.info(f"Content model trained successfully with {len(df)} products")
-        return True
-    except Exception as e:
-        logger.error(f"Train content failed: {e}")
         return False
 
 
@@ -78,12 +47,10 @@ class ContentService:
     def __init__(self):
         self.df = None
         self.tfidf_vectorizer = None
-        self.cosine_sim = None
         self.item_embeddings = None
-        self._loaded = False  # Lazy loading flag
+        self._loaded = False
 
     def _ensure_loaded(self):
-        """Đảm bảo dữ liệu đã được tải - gọi trước mọi method"""
         if self._loaded:
             return
 
@@ -93,38 +60,30 @@ class ContentService:
             BASE_URL = "https://github.com/hangngt/travil/releases/latest/download"
             PRODUCTS_URL = f"{BASE_URL}/products_clean.csv"
             TFIDF_URL = f"{BASE_URL}/tfidf_vectorizer.pkl"
-            COSINE_URL = f"{BASE_URL}/cosine_sim.npy"
 
-            # Download files
+            # CHỈ DOWNLOAD 2 FILE, KHÔNG DOWNLOAD cosine_sim.npy
             if not download_file(PRODUCTS_URL, DATA_PROCESSED / "products_clean.csv"):
                 raise RuntimeError("Failed to download products_clean.csv")
             
             if not download_file(TFIDF_URL, DATA_PROCESSED / "tfidf_vectorizer.pkl"):
                 raise RuntimeError("Failed to download tfidf_vectorizer.pkl")
-            
-            if not download_file(COSINE_URL, DATA_PROCESSED / "cosine_sim.npy"):
-                raise RuntimeError("Failed to download cosine_sim.npy")
 
-            # Load data
-            self.df = pd.read_csv(DATA_PROCESSED / "products_clean.csv").reset_index(drop=True)
+            # Load data - chỉ lấy các cột cần thiết
+            self.df = pd.read_csv(
+                DATA_PROCESSED / "products_clean.csv",
+                usecols=['product_id', 'title', 'location', 'rating', 
+                        'booked_count', 'review_count', 'lat', 'lng', 'description']
+            ).reset_index(drop=True)
 
-            # Load vectorizer - xử lý version mismatch
-            try:
-                self.tfidf_vectorizer = joblib.load(DATA_PROCESSED / "tfidf_vectorizer.pkl")
-            except Exception as e:
-                logger.warning(f"Failed to load vectorizer: {e}, retraining...")
-                # Retrain if load fails
-                self.df['combined_text'] = (
-                    self.df['title'].fillna('') + " " +
-                    self.df.get('description', '').fillna('') + " " +
-                    self.df['location'].fillna('')
-                )
-                self.tfidf_vectorizer = TfidfVectorizer(max_features=5000, stop_words='english', ngram_range=(1, 2))
-                self.tfidf_vectorizer.fit(self.df['combined_text'].fillna(''))
-                joblib.dump(self.tfidf_vectorizer, DATA_PROCESSED / "tfidf_vectorizer.pkl")
+            # Tạo combined text
+            self.df['combined_text'] = (
+                self.df['title'].fillna('') + " " + 
+                self.df.get('description', '').fillna('') + " " + 
+                self.df['location'].fillna('')
+            )
 
-            # Load cosine sim
-            self.cosine_sim = np.load(DATA_PROCESSED / "cosine_sim.npy")
+            # Load TF-IDF vectorizer
+            self.tfidf_vectorizer = joblib.load(DATA_PROCESSED / "tfidf_vectorizer.pkl")
 
             # Fix numeric columns
             numeric_cols = ['rating', 'booked_count', 'review_count', 'lat', 'lng']
@@ -132,25 +91,21 @@ class ContentService:
                 if col in self.df.columns:
                     self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
 
-            # Create item embeddings
-            if 'combined_text' not in self.df.columns:
-                self.df['combined_text'] = (
-                    self.df['title'].fillna('') + " " +
-                    self.df.get('description', '').fillna('') + " " +
-                    self.df['location'].fillna('')
-                )
-            
+            # Tạo item embeddings - nhưng không lưu cosine_sim riêng
             tfidf_matrix = self.tfidf_vectorizer.transform(self.df['combined_text'].fillna(''))
             self.item_embeddings = normalize(tfidf_matrix).toarray().astype(np.float32)
+            
+            # Giải phóng memory
+            del tfidf_matrix
 
             self._loaded = True
-            logger.info(f"ContentService loaded {len(self.df)} products")
+            logger.info(f"ContentService loaded {len(self.df)} products (embeddings shape: {self.item_embeddings.shape})")
 
         except Exception as e:
             logger.error(f"Failed to load ContentService: {e}")
             raise
 
-    # HAVERSINE DISTANCE
+    # Các hàm haversine_distance, calculate_distances_vectorized giữ nguyên
     def haversine_distance(self, lat1, lon1, lat2, lon2):
         R = 6371.0
         lat1_rad = math.radians(lat1)
@@ -176,7 +131,6 @@ class ContentService:
         c = 2 * np.arctan2(np.sqrt(a), np.sqrt(1 - a))
         return R * c
 
-    # CASE 1: FILTER BY CITY
     def filter_by_city(self, city_name: str, top_k=20):
         self._ensure_loaded()
         city_df = self.df[self.df['location'].str.contains(city_name, case=False, na=False)].copy()
@@ -188,7 +142,6 @@ class ContentService:
         city_df = city_df.sort_values('score', ascending=False)
         return city_df.head(top_k)
 
-    # CASE 2: NEARBY GPS
     def get_nearby_places(self, user_lat: float, user_lng: float, radius_km=10, top_k=15):
         self._ensure_loaded()
         valid_geo_df = self.df.dropna(subset=['lat', 'lng']).copy()
@@ -215,7 +168,6 @@ class ContentService:
         logger.info(f"Tìm thấy {len(nearby)} địa điểm trong bán kính {radius_km}km")
         return nearby.head(top_k)
 
-    # HYBRID RECOMMENDATION
     def recommend_hybrid(self,
                          city_name: str = None,
                          user_lat: float = None,

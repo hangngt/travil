@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 
 import pandas as pd
 import firebase_admin
@@ -7,18 +6,14 @@ from pathlib import Path
 from datetime import datetime
 import re
 
-# ===================================
 # PATHS
-# ===================================
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 
 PRODUCTS_CSV = BASE_DIR / "data" / "processed" / "products_clean.csv"
 RATINGS_CSV = BASE_DIR / "data" / "processed" / "user_item_ratings_real.csv"
 
-# ===================================
 # FIREBASE INIT
-# ===================================
 
 cred = credentials.Certificate(
     BASE_DIR / "config" / "firebase-credentials.json"
@@ -28,9 +23,7 @@ firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# ===================================
 # HELPERS
-# ===================================
 
 def parse_number(value):
 
@@ -49,9 +42,7 @@ def parse_number(value):
 
     return int(num[0]) if num else 0
 
-# ===================================
 # PRODUCTS
-# ===================================
 
 def upload_products():
 
@@ -124,9 +115,6 @@ def upload_products():
     print(f"Done products: {total}")
 
 
-# ===================================
-# MAIN
-# ===================================
 
 def main():
 
