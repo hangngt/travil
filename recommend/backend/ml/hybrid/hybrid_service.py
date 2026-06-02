@@ -131,7 +131,13 @@ class HybridService:
                 logger.error(f"Cannot initialize: {e}")
                 return pd.DataFrame()
 
-        cache_key = f"{user_id}_{city_name}_{user_lat}_{user_lng}_{viewed_product_id}"
+        cache_key = (
+            f"{user_id}_"
+            f"{city_name}_"
+            f"{round(user_lat,4) if user_lat else None}_"
+            f"{round(user_lng,4) if user_lng else None}_"
+            f"{viewed_product_id}"
+        )
         if use_cache and cache_key in self.recommendation_cache:
             cached = self.recommendation_cache[cache_key]
             if datetime.now() < cached['expires_at']:
@@ -157,11 +163,36 @@ class HybridService:
         candidates['hybrid_score'] = candidates['final_score']
         candidates = candidates.sort_values('hybrid_score', ascending=False)
 
-        result_columns = ['product_id', 'title', 'location', 'rating', 'hybrid_score']
+        result_columns = [
+            'product_id',
+            'title',
+            'location',
+            'rating',
+            'price',
+            'lat',
+            'lng',
+            'image_url',
+            'url',
+            'hybrid_score'
+        ]
         if 'distance_km' in candidates.columns:
             result_columns.append('distance_km')
+            
+        if user_lat is not None and user_lng is not None:
+            candidates = candidates.dropna(subset=['lat', 'lng'])
+        result = candidates.head(top_k)[result_columns].copy()
+        result = result.replace({np.nan: None})
 
-        result = candidates.head(top_k)[result_columns].round(4)
+        float_cols = [
+            'rating',
+            'price',
+            'distance_km',
+            'hybrid_score'
+        ]
+
+        for col in float_cols:
+            if col in result.columns:
+                result[col] = result[col].round(4)
 
         if use_cache:
             self.recommendation_cache[cache_key] = {

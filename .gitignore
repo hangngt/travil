@@ -71,3 +71,6 @@ android/.kotlin/
 linux/flutter/generated_*
 windows/flutter/generated_*
 macos/Flutter/GeneratedPluginRegistrant.*
+
+# api ggmap
+lib\core\config\map_config.dart

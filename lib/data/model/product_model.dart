@@ -32,7 +32,7 @@ class ProductModel {
       productId: json['product_id'] ?? 0,
       title: json['title'] ?? '',
       description: json['description'] ?? '',
-      imageUrl: json['image_url'] ?? '',
+      imageUrl: json["image_url"] ?? "",
       location: json['location'] ?? '',
       url: json['url'] ?? '',
       rating: (json['rating'] ?? 0.0).toDouble(),

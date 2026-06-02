@@ -5,7 +5,6 @@ import joblib
 import requests
 import math
 import os
-from sklearn.preprocessing import normalize
 import logging
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
@@ -42,6 +41,61 @@ def download_file(url, output_path):
     except Exception as e:
         logger.error(f"Download failed: {e}")
         return False
+    # muốn retrain.
+# def train_content_model():
+#     """
+#     Train TF-IDF model và save sparse matrix
+#     """
+#     logger.info("Training TF-IDF model...")
+
+#     try:
+#         df = pd.read_csv(
+#             DATA_PROCESSED / "products_clean.csv"
+#         )
+
+#         # Fill null
+#         df['title'] = df['title'].fillna('')
+#         df['description'] = df['description'].fillna('')
+#         df['location'] = df['location'].fillna('')
+
+#         # Combined text
+#         df['combined_text'] = (
+#             df['title'] + " " +
+#             df['description'] + " " +
+#             df['location']
+#         )
+
+#         logger.info(f"Products: {len(df)}")
+
+#         # TFIDF
+#         vectorizer = TfidfVectorizer(
+#             stop_words='english',
+#             max_features=10000,
+#             ngram_range=(1, 2)
+#         )
+
+#         tfidf_matrix = vectorizer.fit_transform(
+#             df['combined_text']
+#         )
+
+#         logger.info(
+#             f"TFIDF matrix shape: {tfidf_matrix.shape}"
+#         )
+
+#         # SAVE VECTORIZER
+#         joblib.dump(
+#             vectorizer,
+#             DATA_PROCESSED / "tfidf_vectorizer.pkl"
+#         )
+
+
+#         logger.info("TFIDF model saved")
+
+#         return True
+
+#     except Exception as e:
+#         logger.error(f"TFIDF training failed: {e}")
+#         return False
 
 
 class ContentService:
@@ -71,26 +125,47 @@ class ContentService:
             self.df = pd.read_csv(
                 DATA_PROCESSED / "products_clean.csv",
                 usecols=['product_id', 'title', 'location', 'rating', 
-                        'booked_count', 'review_count', 'lat', 'lng', 'description']
+                        'booked_count', 'review_count', 'lat', 'lng', 'description','image_url','price','url']
             ).reset_index(drop=True)
 
             # Tạo combined text
             self.df['combined_text'] = (
-                self.df['title'].fillna('') + " " + 
-                self.df.get('description', '').fillna('') + " " + 
+                self.df['title'].fillna('') + " " +
+                self.df['description'].fillna('') + " " +
                 self.df['location'].fillna('')
             )
+
+            # Xóa tọa độ invalid
+            self.df.loc[
+                (self.df['lat'].isna()) |
+                (self.df['lng'].isna()),
+                ['lat', 'lng']
+            ] = np.nan
 
             # Load TF-IDF vectorizer
             self.tfidf_vectorizer = joblib.load(DATA_PROCESSED / "tfidf_vectorizer.pkl")
 
+       
+
             # Fix numeric columns
-            numeric_cols = ['rating', 'booked_count', 'review_count', 'lat', 'lng']
+            # Convert numeric columns
+            numeric_cols = [
+                'rating',
+                'booked_count',
+                'review_count',
+                'lat',
+                'lng',
+                'price'
+            ]
+
             for col in numeric_cols:
                 if col in self.df.columns:
-                    self.df[col] = pd.to_numeric(self.df[col], errors='coerce')
+                    self.df[col] = pd.to_numeric(
+                        self.df[col],
+                        errors='coerce'
+                    )
 
-            # QUAN TRỌNG: KHÔNG tạo item_embeddings để tiết kiệm RAM
+            # KHÔNG tạo item_embeddings để tiết kiệm RAM
             self._loaded = True
             logger.info(f"ContentService loaded {len(self.df)} products (no pre-loaded embeddings)")
 
@@ -195,15 +270,30 @@ class ContentService:
             if len(target_indices) > 0:
                 target_idx = target_indices[0]
                 # Transform target text
+                # Lấy text của item đang xem
                 target_text = self.df.iloc[target_idx]['combined_text']
-                target_vector = self.tfidf_vectorizer.transform([target_text])
-                
-                # Transform candidate texts
-                candidate_texts = candidates['combined_text'].fillna('').tolist()
-                candidate_vectors = self.tfidf_vectorizer.transform(candidate_texts)
-                
-                # Tính cosine similarity
-                similarities = cosine_similarity(candidate_vectors, target_vector).flatten()
+
+                # Convert thành TFIDF vector
+                target_vector = self.tfidf_vectorizer.transform(
+                    [target_text]
+                )
+
+                # Lấy text candidates
+                candidate_texts = candidates[
+                    'combined_text'
+                ].fillna('').tolist()
+
+                # Convert candidates thành vectors
+                candidate_vectors = self.tfidf_vectorizer.transform(
+                    candidate_texts
+                )
+
+                # Cosine similarity
+                similarities = cosine_similarity(
+                    candidate_vectors,
+                    target_vector
+                ).flatten()
+
                 candidates['similarity_score'] = similarities
             else:
                 candidates['similarity_score'] = 0.0
@@ -229,21 +319,59 @@ class ContentService:
 
         candidates = candidates.sort_values('final_score', ascending=False)
 
-        result_columns = ['product_id', 'title', 'location', 'rating', 'similarity_score', 'popularity_score', 'final_score']
+        result_columns = [
+            'product_id',
+            'title',
+            'location',
+            'rating',
+            'price',
+            'lat',
+            'lng',
+            'image_url',
+            'url',
+            'similarity_score',
+            'popularity_score',
+            'final_score'
+        ]
         if 'distance_km' in candidates.columns:
-            result_columns.insert(4, 'distance_km')
+            result_columns.insert(5, 'distance_km')
 
-        return candidates.head(top_k)[result_columns]
+        result = candidates.head(top_k)[result_columns].copy()
+
+        # Replace NaN -> None để Flutter parse đúng
+        result = result.replace({np.nan: None})
+
+        return result
 
     def get_popular_places(self, top_k=20):
-        self._ensure_loaded()
+        """Lấy các địa điểm phổ biến nhất"""
         popular = self.df.copy()
         popular['popularity'] = np.log1p(popular['booked_count'].fillna(0)) + np.log1p(popular['review_count'].fillna(0))
         popular = popular.sort_values('popularity', ascending=False)
-        return popular.head(top_k)[['product_id', 'title', 'location', 'rating', 'booked_count', 'review_count']]
-
+        return popular.head(top_k)[[
+            'product_id',
+            'title',
+            'location',
+            'rating',
+            'price',
+            'image_url',
+            'url',
+            'booked_count',
+            'review_count'
+        ]]
+    
     def get_highly_rated(self, top_k=20, min_ratings=10):
-        self._ensure_loaded()
+        """Lấy các địa điểm có rating cao nhất"""
         highly_rated = self.df[self.df['review_count'] >= min_ratings].copy()
         highly_rated = highly_rated.sort_values('rating', ascending=False)
-        return highly_rated.head(top_k)[['product_id', 'title', 'location', 'rating', 'review_count']]
+        return highly_rated.head(top_k)[[
+            'product_id',
+            'title',
+            'location',
+            'rating',
+            'price',
+            'image_url',
+            'url',
+            'booked_count',
+            'review_count'
+        ]]
