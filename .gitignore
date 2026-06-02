@@ -73,4 +73,5 @@ windows/flutter/generated_*
 macos/Flutter/GeneratedPluginRegistrant.*
 
 # api ggmap
-lib\core\config\map_config.dart
+E:\multiproject\multiplatform\travil\lib\core\config\map_config.dart
+E:\multiproject\multiplatform\travil\android\app\src\main\AndroidManifest.xml
