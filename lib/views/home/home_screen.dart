@@ -1,12 +1,14 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:travil/data/model/product_model.dart';
 import 'package:travil/data/services/auth_service.dart';
 import 'package:travil/viewmodel/map_viewmodel.dart';
+import 'package:travil/viewmodel/willgo_viewmodel.dart';
 import 'package:travil/views/detail/detail_screen.dart';
 import 'package:travil/views/home/map_screen.dart';
+import 'package:travil/views/home/willgo_screen.dart';
 import 'package:travil/widget/product_card.dart';
+import 'package:travil/widget/search_box.dart';
 import '../../../viewmodel/home_viewmodel.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -22,7 +24,7 @@ class _HomeScreenState extends State<HomeScreen> {
     super.initState();
 
     Future.microtask(() {
-      context.read<HomeViewModel>().loadRecommendations();
+      context.read<HomeViewModel>().loadData();
     });
   }
 
@@ -47,7 +49,9 @@ class _HomeScreenState extends State<HomeScreen> {
                     // HEADER
                     _buildHeader(vm),
                     const SizedBox(height: 38),
-                    // HERO
+                    // SEARCH
+                    SearchBox(vm: vm),
+                    const SizedBox(height: 32), // HERO
                     const Text(
                       "Explore\nBeautiful Places",
                       style: TextStyle(
@@ -65,9 +69,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     ),
                     const SizedBox(height: 30),
-                    // MAP
-                    _buildMapPreview(vm),
-                    const SizedBox(height: 32),
+
                     // TOP RATED
                     _buildSectionTitle("Top Rated"),
                     const SizedBox(height: 16),
@@ -76,7 +78,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     // NEARBY
                     _buildSectionTitle("Nearby You"),
                     const SizedBox(height: 16),
-                    _buildHorizontalList(vm.nearbyPlaces),
+                    _buildHorizontalList(vm.recommendations),
                     const SizedBox(height: 30),
                   ],
                 ),
@@ -90,6 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
       children: [
         const CircleAvatar(radius: 24),
         const SizedBox(width: 14),
+        // LOCATION
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -101,35 +104,33 @@ class _HomeScreenState extends State<HomeScreen> {
                   fontSize: 13,
                 ),
               ),
-              DropdownButtonHideUnderline(
-                child: DropdownButton<String>(
-                  value: vm.selectedCity,
-                  isDense: true,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black,
-                  ),
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'Da Nang',
-                      child: Text('Da Nang'),
-                    ),
-                    DropdownMenuItem(
-                      value: 'Hoi An',
-                      child: Text('Hoi An'),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    if (value != null) {
-                      vm.changeCity(value);
-                    }
-                  },
+              const SizedBox(height: 4),
+              DropdownButton<String>(
+                isExpanded: true,
+                value: vm.selectedCity,
+                hint: const Text(
+                  "Select location",
                 ),
-              ),
+                items: vm.locations.map((location) {
+                  return DropdownMenuItem<String>(
+                    value: location,
+                    child: Text(
+                      location,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
+                onChanged: (value) async {
+                  if (value != null) {
+                    await vm.changeCity(value);
+                  }
+                },
+              )
             ],
           ),
         ),
+
+        const SizedBox(width: 8),
         IconButton(
           icon: const Icon(Icons.my_location),
           onPressed: () {
@@ -146,7 +147,17 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         IconButton(
           icon: const Icon(Icons.bookmark_border),
-          onPressed: () {},
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChangeNotifierProvider(
+                  create: (_) => WillGoViewModel(),
+                  child: const WillGoScreen(),
+                ),
+              ),
+            );
+          },
         ),
         Container(
           decoration: BoxDecoration(
@@ -175,15 +186,36 @@ class _HomeScreenState extends State<HomeScreen> {
             fontWeight: FontWeight.bold,
           ),
         ),
-        TextButton(
-          onPressed: () {},
-          child: const Text("See all"),
-        ),
+        // TextButton(
+        //   onPressed: () {},
+        //   child: const Text("See all"),
+        // ),
       ],
     );
   }
 
   Widget _buildHorizontalList(List<ProductModel> list) {
+    if (list.isEmpty) {
+      return Container(
+        height: 200,
+        alignment: Alignment.center,
+        child: const Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.place_outlined, size: 48, color: Colors.grey),
+            SizedBox(height: 12),
+            Text(
+              "This city does not yet feature curated tourist experiences.",
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            Text(
+              "Try selecting a different city.",
+              style: TextStyle(fontSize: 14, color: Colors.grey),
+            ),
+          ],
+        ),
+      );
+    }
     return SizedBox(
       height: 320,
       child: ListView.builder(
@@ -204,32 +236,6 @@ class _HomeScreenState extends State<HomeScreen> {
             },
           );
         },
-      ),
-    );
-  }
-
-  Widget _buildMapPreview(HomeViewModel vm) {
-    return Container(
-      height: 240,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(24),
-        child: GoogleMap(
-          initialCameraPosition: CameraPosition(
-            target: vm.currentLocation ??
-                const LatLng(
-                  16.0471,
-                  108.2068,
-                ),
-            zoom: 13,
-          ),
-          myLocationEnabled: true,
-          myLocationButtonEnabled: true,
-          zoomControlsEnabled: false,
-          markers: vm.markers,
-        ),
       ),
     );
   }

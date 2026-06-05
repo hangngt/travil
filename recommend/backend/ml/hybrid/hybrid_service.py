@@ -167,6 +167,7 @@ class HybridService:
             'product_id',
             'title',
             'location',
+            'description'
             'rating',
             'price',
             'lat',

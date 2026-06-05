@@ -1,4 +1,5 @@
-import '../model/product_model.dart';
+import 'package:travil/data/model/product_model.dart';
+
 import '../services/api_service.dart';
 
 class ProductRepository {
@@ -9,18 +10,16 @@ class ProductRepository {
     double? lat,
     double? lng,
   }) async {
-    final params = <String, dynamic>{};
-
-    if (city != null) params['city'] = city;
-    if (lat != null) params['lat'] = lat;
-    if (lng != null) params['lng'] = lng;
-
     final data = await _apiService.getRecommendations(
-      city: params['city'],
-      lat: params['lat'],
-      lng: params['lng'],
+      city: city,
+      lat: lat,
+      lng: lng,
     );
 
-    return data.map((e) => ProductModel.fromJson(e)).toList();
+    return data
+        .map<ProductModel>(
+          (e) => ProductModel.fromJson(e),
+        )
+        .toList();
   }
 }

@@ -6,53 +6,66 @@ class WillGoViewModel extends ChangeNotifier {
   final FirestoreService _firestore = FirestoreService();
 
   List<ProductModel> willGoList = [];
+  Set<int> selectedProducts = {};
+
   bool isLoading = false;
 
-  // Load danh sách Will Go
   Future<void> loadWillGoList(String uid) async {
-    isLoading = true;
-    notifyListeners();
-
     try {
+      isLoading = true;
+      notifyListeners();
+
       final data = await _firestore.getWillGoList(uid);
-      willGoList = data.map((item) => ProductModel.fromJson(item)).toList();
-    } catch (e) {
-      print("Load WillGo error: $e");
-    }
 
-    isLoading = false;
-    notifyListeners();
+      willGoList = data.map((e) => ProductModel.fromJson(e)).toList();
+    } catch (e) {
+      debugPrint("loadWillGoList error: $e");
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
   }
 
-  // Thêm vào Will Go
-  Future<void> addToWillGo(String uid, ProductModel product) async {
+  Future<void> addToWillGo(
+    String uid,
+    ProductModel product,
+  ) async {
     try {
-      await _firestore.addToWillGo(uid, product.productId.toString(), {
-        'product_id': product.productId,
-        'title': product.title,
-        'image_url': product.imageUrl,
-        'location': product.location,
-        'price': product.price,
-        'rating': product.rating,
-      });
+      await _firestore.addToWillGo(
+        uid,
+        product.productId.toString(),
+        product.toJson(),
+      );
 
-      if (!willGoList.any((p) => p.productId == product.productId)) {
+      if (!willGoList.any(
+        (e) => e.productId == product.productId,
+      )) {
         willGoList.insert(0, product);
-        notifyListeners();
       }
-    } catch (e) {
-      print("Add to WillGo error: $e");
-    }
-  }
 
-  // Xóa khỏi Will Go
-  Future<void> removeFromWillGo(String uid, int productId) async {
-    try {
-      await _firestore.removeFromWillGo(uid, productId.toString());
-      willGoList.removeWhere((p) => p.productId == productId);
       notifyListeners();
     } catch (e) {
-      print("Remove from WillGo error: $e");
+      debugPrint("addToWillGo error: $e");
+    }
+  }
+
+  Future<void> removeFromWillGo(
+    String uid,
+    int productId,
+  ) async {
+    try {
+      await _firestore.removeFromWillGo(
+        uid,
+        productId.toString(),
+      );
+
+      willGoList.removeWhere(
+        (e) => e.productId == productId,
+      );
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint("removeFromWillGo error: $e");
     }
   }
 }

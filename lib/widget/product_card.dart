@@ -18,7 +18,7 @@ class ProductCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 240,
-        height: 320, // FIX HEIGHT
+        height: 320,
         margin: const EdgeInsets.only(right: 16),
         decoration: BoxDecoration(
           color: Colors.white,
@@ -31,7 +31,6 @@ class ProductCard extends StatelessWidget {
             ),
           ],
         ),
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

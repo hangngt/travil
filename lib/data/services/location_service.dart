@@ -1,11 +1,16 @@
 import 'package:geolocator/geolocator.dart';
 
 class LocationService {
-  Future<bool> handlePermission() async {
+  Future<Position> getCurrentLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
 
     if (!serviceEnabled) {
-      throw Exception("GPS chưa bật");
+      // mở màn hình bật GPS
+      await Geolocator.openLocationSettings();
+
+      throw Exception(
+        "Vui lòng bật GPS để sử dụng tính năng này",
+      );
     }
 
     LocationPermission permission = await Geolocator.checkPermission();
@@ -15,30 +20,21 @@ class LocationService {
     }
 
     if (permission == LocationPermission.denied) {
-      throw Exception("GPS permission denied");
+      throw Exception(
+        "Bạn chưa cấp quyền vị trí",
+      );
     }
 
     if (permission == LocationPermission.deniedForever) {
-      throw Exception("GPS permission permanently denied");
+      await Geolocator.openAppSettings();
+
+      throw Exception(
+        "Vui lòng cấp quyền vị trí trong cài đặt",
+      );
     }
 
-    return true;
-  }
-
-  Future<Position> getCurrentLocation() async {
-    await handlePermission();
-
-    return await Geolocator.getCurrentPosition(
+    return Geolocator.getCurrentPosition(
       desiredAccuracy: LocationAccuracy.high,
-    );
-  }
-
-  Stream<Position> getPositionStream() {
-    return Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.bestForNavigation,
-        distanceFilter: 10,
-      ),
     );
   }
 }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:travil/viewmodel/map_viewmodel.dart';
 
 import '../../viewmodel/home_viewmodel.dart';
 
@@ -19,9 +20,9 @@ class _MapScreenState extends State<MapScreen> {
     super.initState();
 
     Future.microtask(() async {
-      await context.read<HomeViewModel>().loadNearbyPlaces();
+      await context.read<MapViewModel>().loadNearbyPlaces();
 
-      final vm = context.read<HomeViewModel>();
+      final vm = context.read<MapViewModel>();
 
       // AUTO FOCUS TO FIRST PLACE
       if (vm.nearbyPlaces.isNotEmpty) {
@@ -39,7 +40,7 @@ class _MapScreenState extends State<MapScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final vm = context.watch<HomeViewModel>();
+    final vm = context.watch<MapViewModel>();
 
     return Scaffold(
       body: vm.isLoading

@@ -64,8 +64,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '471341674678',
     projectId: 'travil-68915',
     storageBucket: 'travil-68915.firebasestorage.app',
-    androidClientId: '471341674678-31pqvsd0gj0ig19tj1kup2i8tg0t8hn1.apps.googleusercontent.com',
-    iosClientId: '471341674678-t80ui0ti8gf4aelfjiqh3a9g4h575cgk.apps.googleusercontent.com',
+    androidClientId:
+        '471341674678-31pqvsd0gj0ig19tj1kup2i8tg0t8hn1.apps.googleusercontent.com',
+    iosClientId:
+        '471341674678-t80ui0ti8gf4aelfjiqh3a9g4h575cgk.apps.googleusercontent.com',
     iosBundleId: 'com.example.travil',
   );
 
@@ -75,8 +77,10 @@ class DefaultFirebaseOptions {
     messagingSenderId: '471341674678',
     projectId: 'travil-68915',
     storageBucket: 'travil-68915.firebasestorage.app',
-    androidClientId: '471341674678-31pqvsd0gj0ig19tj1kup2i8tg0t8hn1.apps.googleusercontent.com',
-    iosClientId: '471341674678-t80ui0ti8gf4aelfjiqh3a9g4h575cgk.apps.googleusercontent.com',
+    androidClientId:
+        '471341674678-31pqvsd0gj0ig19tj1kup2i8tg0t8hn1.apps.googleusercontent.com',
+    iosClientId:
+        '471341674678-t80ui0ti8gf4aelfjiqh3a9g4h575cgk.apps.googleusercontent.com',
     iosBundleId: 'com.example.travil',
   );
 

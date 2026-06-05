@@ -1,12 +1,21 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 
 class ApiService {
-  final Dio dio = Dio(
-    BaseOptions(
-      baseUrl: 'https://travil-m2kl.onrender.com',
-      connectTimeout: const Duration(seconds: 15),
-    ),
-  );
+  late final Dio dio;
+
+  ApiService() {
+    dio = Dio(
+      BaseOptions(
+        baseUrl: 'https://travil-m2kl.onrender.com',
+        connectTimeout: const Duration(seconds: 30),
+        receiveTimeout: const Duration(seconds: 30),
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      ),
+    );
+  }
 
   Future<List<dynamic>> getRecommendations({
     String? city,
@@ -17,25 +26,47 @@ class ApiService {
     try {
       final params = <String, dynamic>{};
 
-      if (city != null) params['city'] = city;
-      if (lat != null) params['lat'] = lat;
-      if (lng != null) params['lng'] = lng;
-      if (userId != null) params['user_id'] = userId;
+      if (city != null && city.isNotEmpty) {
+        params['city'] = city;
+      }
 
-      print('PARAMS CLEAN: $params');
+      if (lat != null) {
+        params['lat'] = lat;
+      }
+
+      if (lng != null) {
+        params['lng'] = lng;
+      }
+
+      if (userId != null) {
+        params['user_id'] = userId;
+      }
+
+      debugPrint("CALL API");
+      debugPrint("PARAMS: $params");
 
       final response = await dio.get(
         '/recommend',
         queryParameters: params,
       );
 
-      print('SUCCESS: ${response.data}');
-      return response.data;
+      debugPrint("STATUS: ${response.statusCode}");
+      debugPrint("DATA: ${response.data}");
+
+      if (response.statusCode == 200 && response.data is List) {
+        return response.data;
+      }
+
+      return [];
     } on DioException catch (e) {
-      print('STATUS: ${e.response?.statusCode}');
-      print('URI: ${e.requestOptions.uri}');
-      print('DATA: ${e.response?.data}');
-      throw Exception(e.response?.data ?? e.message);
+      debugPrint("DIO ERROR");
+      debugPrint("MESSAGE: ${e.message}");
+      debugPrint("STATUS: ${e.response?.statusCode}");
+      debugPrint("DATA: ${e.response?.data}");
+      return [];
+    } catch (e) {
+      debugPrint("ERROR: $e");
+      return [];
     }
   }
 }

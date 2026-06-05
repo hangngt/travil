@@ -3,98 +3,123 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 import '../data/model/product_model.dart';
 import '../data/responsive/product_repository.dart';
-import '../data/services/location_service.dart';
+import '../data/services/product_firestore.dart';
 
 class HomeViewModel extends ChangeNotifier {
   final ProductRepository _repository = ProductRepository();
-  final LocationService _locationService = LocationService();
 
+  final ProductFirestore _firestore = ProductFirestore();
+
+  // PRODUCTS
   List<ProductModel> recommendations = [];
   List<ProductModel> topRated = [];
-  List<ProductModel> nearbyPlaces = [];
 
-  bool isLoading = false;
+  // SEARCH
+  List<ProductModel> searchResults = [];
 
-  String selectedCity = 'Da Nang';
-  String? errorMessage;
+  // LOCATION
+  List<String> locations = [];
+  String? selectedCity;
 
   // MAP
-
-  LatLng? currentLocation;
   Set<Marker> markers = {};
   ProductModel? selectedPlace;
 
-  // LOAD DATA
+  // STATE
+  bool isLoading = false;
 
-  Future<void> loadRecommendations({
-    bool useGPS = false,
-  }) async {
+  // LOAD INITIAL
+
+  Future<void> loadData() async {
     isLoading = true;
     notifyListeners();
-    try {
-      if (useGPS) {
-        final position = await _locationService.getCurrentLocation();
-        currentLocation = LatLng(
-          position.latitude,
-          position.longitude,
-        );
 
-        // recommendations = await _repository.getRecommendations(
-        //   city: selectedCity,
-        //   lat: position.latitude,
-        //   lng: position.longitude,
-        // );
-        recommendations = await _repository.getRecommendations(
-          city: selectedCity,
-        ); // test
-        print(recommendations.length);
-        for (final p in recommendations) {
-          print("${p.title} => ${p.lat}, ${p.lng}");
-        }
-      } else {
-        recommendations = await _repository.getRecommendations(
-          city: selectedCity,
-        );
-        print(recommendations.length);
-        for (final p in recommendations) {
-          print("${p.title} => ${p.lat}, ${p.lng}");
-        }
+    try {
+      locations = await _firestore.getLocations();
+
+      // DEFAULT LOCATION
+      if (locations.isNotEmpty && selectedCity == null) {
+        selectedCity = locations.first;
       }
 
+      // LOAD PRODUCTS
+      if (selectedCity != null) {
+        await loadRecommendations();
+      }
+    } catch (e) {
+      debugPrint("LOAD DATA ERROR: $e");
+    }
+
+    isLoading = false;
+    notifyListeners();
+  }
+
+  // LOAD PRODUCTS
+
+  Future<void> loadRecommendations() async {
+    if (selectedCity == null) return;
+
+    try {
+      recommendations = await _repository.getRecommendations(
+        city: selectedCity!,
+      );
+
+      // TOP RATED
       topRated = [...recommendations];
 
       topRated.sort(
         (a, b) => b.rating.compareTo(a.rating),
       );
 
-      nearbyPlaces = recommendations;
       _buildMarkers();
-    } catch (e) {
-      errorMessage = e.toString();
-    } finally {
-      isLoading = false;
+
       notifyListeners();
+    } catch (e) {
+      debugPrint("LOAD PRODUCT ERROR: $e");
     }
   }
 
-  Future<void> loadNearbyPlaces() async {
-    await loadRecommendations(useGPS: true);
-  }
+  // CHANGE CITY
 
-  void changeCity(String city) {
+  Future<void> changeCity(String city) async {
     selectedCity = city;
-    loadRecommendations();
+
+    notifyListeners();
+
+    await loadRecommendations();
   }
 
-  // BUILD MARKERS
+  //SEARCH
+
+  Future<void> searchProducts(
+    String query,
+  ) async {
+    if (query.trim().isEmpty) {
+      searchResults = [];
+
+      notifyListeners();
+
+      return;
+    }
+
+    searchResults = await _firestore.searchProducts(
+      query,
+    );
+
+    notifyListeners();
+  }
+
+  void clearSearch() {
+    searchResults.clear();
+    notifyListeners();
+  }
+
+  //MARKERS
+
   void _buildMarkers() {
     markers.clear();
-    print("TOTAL MARKERS: ${nearbyPlaces.length}");
-    for (final p in nearbyPlaces) {
-      print("${p.title} => ${p.lat}, ${p.lng}");
-    }
-    // PLACES
-    for (final place in nearbyPlaces) {
+
+    for (final place in recommendations) {
       markers.add(
         Marker(
           markerId: MarkerId(
@@ -104,33 +129,9 @@ class HomeViewModel extends ChangeNotifier {
             place.lat,
             place.lng,
           ),
-          // icon: BitmapDescriptor.defaultMarkerWithHue(
-          //   BitmapDescriptor.hueOrange,
-          // ),  //thay màu cho icon gps
           infoWindow: InfoWindow(
             title: place.title,
             snippet: place.location,
-          ),
-          onTap: () {
-            selectedPlace = place;
-            notifyListeners();
-          },
-        ),
-      );
-    }
-
-    // USER LOCATION
-
-    if (currentLocation != null) {
-      markers.add(
-        Marker(
-          markerId: const MarkerId("me"),
-          position: currentLocation!,
-          icon: BitmapDescriptor.defaultMarkerWithHue(
-            BitmapDescriptor.hueBlue,
-          ),
-          infoWindow: const InfoWindow(
-            title: "You",
           ),
         ),
       );

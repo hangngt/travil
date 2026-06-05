@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:travil/views/history/history_screen.dart';
 import 'calendar/calendar_screen.dart';
 import 'home/home_screen.dart';
 import 'stats/stats_screen.dart';
-import 'willgo/willgo_screen.dart';
 
 class MainNavigation extends StatefulWidget {
   const MainNavigation({super.key});
@@ -18,7 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
     const HomeScreen(),
     const CalendarScreen(),
     const StatsScreen(),
-    const WillGoScreen(),
+    const HistoryScreen(),
   ];
 
   @override
@@ -36,7 +36,7 @@ class _MainNavigationState extends State<MainNavigation> {
             label: 'Calendar',
           ),
           BottomNavigationBarItem(icon: Icon(Icons.bar_chart), label: 'Stats'),
-          BottomNavigationBarItem(icon: Icon(Icons.bookmark), label: 'Will Go'),
+          BottomNavigationBarItem(icon: Icon(Icons.star), label: 'History'),
         ],
       ),
     );

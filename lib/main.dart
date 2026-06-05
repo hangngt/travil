@@ -1,6 +1,10 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:travil/viewmodel/history_viewmodel.dart';
+import 'package:travil/viewmodel/planned_viewmodel.dart';
+import 'package:travil/viewmodel/rating_viewmodel.dart';
+import 'package:travil/viewmodel/trip_status_viewmodel.dart';
 
 import 'data/services/auth_service.dart';
 import 'viewmodel/home_viewmodel.dart';
@@ -37,6 +41,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => CalendarViewModel(), lazy: true),
         ChangeNotifierProvider(create: (_) => StatsViewModel(), lazy: true),
         ChangeNotifierProvider(create: (_) => WillGoViewModel(), lazy: true),
+        ChangeNotifierProvider(create: (_) => RatingViewModel(), lazy: true),
+        ChangeNotifierProvider(create: (_) => HistoryViewModel(), lazy: true),
+        ChangeNotifierProvider(
+            create: (_) => TripStatusViewModel(), lazy: true),
+        ChangeNotifierProvider(
+          create: (_) => PlannedViewModel(),
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -1,32 +1,88 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
-import 'package:fl_chart/fl_chart.dart';
+import 'package:travil/views/stats/montlystats.dart';
 
 class StatsViewModel extends ChangeNotifier {
-  List<FlSpot> travelSpots = [
-    const FlSpot(1, 3),
-    const FlSpot(2, 5),
-    const FlSpot(3, 2),
-    const FlSpot(4, 7),
-    const FlSpot(5, 4),
-    const FlSpot(6, 8),
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+
+  bool isLoading = false;
+
+  int totalPlanned = 0;
+  int totalVisited = 0;
+
+  Map<int, MonthlyStat> monthlyStats = {};
+
+  final List<String> monthNames = [
+    "Jan",
+    "Feb",
+    "Mar",
+    "Apr",
+    "May",
+    "Jun",
+    "Jul",
+    "Aug",
+    "Sep",
+    "Oct",
+    "Nov",
+    "Dec",
   ];
 
-  List<String> visitedPlaces = [
-    "Ba Na Hills",
-    "Hoi An Ancient Town",
-    "Dragon Bridge",
-    "My Son Sanctuary",
-  ];
+  Future<void> loadStats(String uid) async {
+    try {
+      isLoading = true;
 
-  int totalTrips = 12;
-  int totalDays = 45;
+      notifyListeners();
 
-  void loadStats() {
-    notifyListeners();
-  }
+      monthlyStats = {
+        for (int i = 1; i <= 12; i++) i: MonthlyStat(),
+      };
 
-  void showVisitedPlaces() {
-    // Có thể mở bottom sheet hoặc navigate
-    print("Visited Places: $visitedPlaces");
+      totalPlanned = 0;
+      totalVisited = 0;
+
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('trip_status')
+          .get();
+
+      for (var doc in snapshot.docs) {
+        final data = doc.data();
+
+        final String status = data['status'] ?? '';
+
+        // PLANNED
+        if (status == 'planned' && data['plannedDate'] != null) {
+          final plannedDate = (data['plannedDate'] as Timestamp).toDate();
+
+          final month = plannedDate.month;
+
+          monthlyStats[month]!.planned++;
+
+          totalPlanned++;
+        }
+
+        // VISITED
+        if (status == 'visited' && data['visitedAt'] != null) {
+          final visitedDate = (data['visitedAt'] as Timestamp).toDate();
+
+          final month = visitedDate.month;
+
+          monthlyStats[month]!.visited++;
+
+          totalVisited++;
+        }
+      }
+
+      notifyListeners();
+    } catch (e) {
+      debugPrint(
+        "loadStats error: $e",
+      );
+    } finally {
+      isLoading = false;
+
+      notifyListeners();
+    }
   }
 }

@@ -1,4 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/material.dart';
+import 'package:travil/data/model/product_model.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -46,9 +48,9 @@ class FirestoreService {
           .collection('willgo')
           .doc(productId)
           .set({
-            ...productData,
-            'addedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+        ...productData,
+        'addedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       print(' Added to Will Go: $productId');
     } catch (e) {
@@ -76,13 +78,12 @@ class FirestoreService {
   /// Lấy danh sách Will Go của user
   Future<List<Map<String, dynamic>>> getWillGoList(String uid) async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('users')
-              .doc(uid)
-              .collection('willgo')
-              .orderBy('addedAt', descending: true)
-              .get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('willgo')
+          .orderBy('addedAt', descending: true)
+          .get();
 
       return snapshot.docs.map((doc) => doc.data()).toList();
     } catch (e) {
@@ -102,12 +103,118 @@ class FirestoreService {
         .map((snapshot) => snapshot.docs.map((doc) => doc.data()).toList());
   }
 
+  // TRIP STATUS
+  // Future<void> updateTripStatus({
+  //   required String uid,
+  //   required String productId,
+  //   required String status,
+  //   required ProductModel product,
+  // }) async {
+  //   try {
+  //     await _firestore
+  //         .collection('users')
+  //         .doc(uid)
+  //         .collection('trip_status')
+  //         .doc(productId)
+  //         .set({
+  //       ...product.toJson(),
+  //       'status': status,
+  //       'updatedAt': FieldValue.serverTimestamp(),
+  //       'plannedDate': product.plannedDate,
+  //       'visitedAt': status == "visited" ? FieldValue.serverTimestamp() : null,
+  //     }, SetOptions(merge: true));
+
+  //     // if (status == "visited") {
+  //     //   await _firestore
+  //     //       .collection('users')
+  //     //       .doc(uid)
+  //     //       .collection('history')
+  //     //       .doc(productId)
+  //     //       .set({
+  //     //     ...pr,
+  //     //     'visitedAt': FieldValue.serverTimestamp(),
+  //     //   }, SetOptions(merge: true));
+  //     // }
+
+  //     debugPrint("Trip status updated");
+  //   } catch (e) {
+  //     debugPrint("updateTripStatus error: $e");
+  //     rethrow;
+  //   }
+  // }
+  Future<void> updateTripStatus({
+    required String uid,
+    required String productId,
+    required String status,
+    required ProductModel product,
+  }) async {
+    try {
+      await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('trip_status')
+          .doc(productId)
+          .set({
+        ...product.toJson(),
+
+        'status': status,
+
+        // FIX
+        'plannedDate': product.plannedDate != null
+            ? Timestamp.fromDate(
+                product.plannedDate!,
+              )
+            : null,
+
+        'updatedAt': FieldValue.serverTimestamp(),
+
+        'visitedAt': status == "visited" ? FieldValue.serverTimestamp() : null,
+      }, SetOptions(merge: true));
+
+      // SAVE HISTORY
+      if (status == "visited") {
+        await _firestore
+            .collection('users')
+            .doc(uid)
+            .collection('history')
+            .doc(productId)
+            .set({
+          ...product.toJson(),
+          'visitedAt': FieldValue.serverTimestamp(),
+        }, SetOptions(merge: true));
+      }
+    } catch (e) {
+      debugPrint(
+        "updateTripStatus error: $e",
+      );
+    }
+  }
+
+  Future<List<Map<String, dynamic>>> getHistory(
+    String uid,
+  ) async {
+    try {
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('history')
+          .orderBy('visitedAt', descending: true)
+          .get();
+
+      return snapshot.docs.map((e) => e.data()).toList();
+    } catch (e) {
+      print("getHistory error: $e");
+      return [];
+    }
+  }
+
   // RATING COLLECTION
 
   /// Thêm / Cập nhật rating cho product
   Future<void> addRating({
     required String uid,
     required String productId,
+    required String title,
     required double rating,
     String? review,
   }) async {
@@ -118,11 +225,12 @@ class FirestoreService {
           .collection('ratings')
           .doc(productId)
           .set({
-            'productId': productId,
-            'rating': rating,
-            'review': review,
-            'ratedAt': FieldValue.serverTimestamp(),
-          }, SetOptions(merge: true));
+        'productId': productId,
+        'rating': rating,
+        'title': title,
+        'review': review,
+        'ratedAt': FieldValue.serverTimestamp(),
+      }, SetOptions(merge: true));
 
       // Cũng lưu rating vào collection interactions (dùng cho recommendation)
       await _firestore.collection('interactions').add({
@@ -142,13 +250,12 @@ class FirestoreService {
   /// Lấy rating của user cho 1 product
   Future<double?> getUserRating(String uid, String productId) async {
     try {
-      final doc =
-          await _firestore
-              .collection('users')
-              .doc(uid)
-              .collection('ratings')
-              .doc(productId)
-              .get();
+      final doc = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('ratings')
+          .doc(productId)
+          .get();
 
       if (doc.exists) {
         return doc.data()?['rating']?.toDouble();
@@ -163,13 +270,12 @@ class FirestoreService {
   /// Lấy tất cả rating của user
   Future<List<Map<String, dynamic>>> getUserRatings(String uid) async {
     try {
-      final snapshot =
-          await _firestore
-              .collection('users')
-              .doc(uid)
-              .collection('ratings')
-              .orderBy('ratedAt', descending: true)
-              .get();
+      final snapshot = await _firestore
+          .collection('users')
+          .doc(uid)
+          .collection('ratings')
+          .orderBy('ratedAt', descending: true)
+          .get();
 
       return snapshot.docs.map((doc) => doc.data()).toList();
     } catch (e) {
