@@ -88,7 +88,7 @@ class NoteCalendar extends StatelessWidget {
                   style: TextStyle(
                     color: Colors.blue.shade400,
                     fontWeight: FontWeight.bold,
-                    fontSize: 18,
+                    fontSize: 15,
                   ),
                 ),
                 const Spacer(),
@@ -175,7 +175,7 @@ class NoteCalendar extends StatelessWidget {
             Text(
               note,
               style: const TextStyle(
-                fontSize: 22,
+                fontSize: 18,
                 fontWeight: FontWeight.bold,
               ),
             ),
@@ -184,7 +184,7 @@ class NoteCalendar extends StatelessWidget {
               "Description",
               style: TextStyle(
                 color: Colors.grey,
-                fontSize: 16,
+                fontSize: 12,
               ),
             ),
           ],

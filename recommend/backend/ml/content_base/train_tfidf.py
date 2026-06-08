@@ -323,7 +323,7 @@ class ContentService:
             'product_id',
             'title',
             'location',
-            'desciption'
+            'desciption',
             'rating',
             'price',
             'lat',

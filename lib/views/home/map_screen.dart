@@ -3,8 +3,6 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:travil/viewmodel/map_viewmodel.dart';
 
-import '../../viewmodel/home_viewmodel.dart';
-
 class MapScreen extends StatefulWidget {
   const MapScreen({super.key});
 

@@ -1,171 +1,3 @@
-// import 'package:cloud_firestore/cloud_firestore.dart';
-// import 'package:flutter/material.dart';
-// import 'package:firebase_auth/firebase_auth.dart';
-
-// import '../data/model/product_model.dart';
-
-// class CalendarViewModel extends ChangeNotifier {
-//   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-
-//   DateTime selectedDay = DateTime.now();
-//   DateTime focusedDay = DateTime.now();
-
-//   final TextEditingController noteController = TextEditingController();
-
-//   // PLANNED TRIPS
-//   List<ProductModel> selectedDayTrips = [];
-
-//   // NOTES THEO NGÀY
-//   Map<String, List<String>> notesByDate = {};
-
-//   List<String> selectedDayNotes = [];
-
-//   // ALL DAYS HAS TRIPS
-//   Set<String> tripDays = {};
-
-//   String getDateKey(DateTime date) {
-//     return "${date.year}-${date.month}-${date.day}";
-//   }
-
-//   Future<void> loadRoutines(DateTime date) async {
-//     final uid = FirebaseAuth.instance.currentUser!.uid;
-
-//     await loadTripsByDate(uid, date);
-
-//     final key = getDateKey(date);
-
-//     selectedDayNotes = notesByDate[key] ?? [];
-
-//     notifyListeners();
-//   }
-
-//   void onDaySelected(
-//     DateTime selected,
-//     DateTime focused,
-//   ) {
-//     selectedDay = selected;
-//     focusedDay = focused;
-
-//     loadRoutines(selected);
-
-//     notifyListeners();
-//   }
-
-//   Future<void> showAddRoutineDialog(
-//     BuildContext context,
-//   ) async {
-//     noteController.clear();
-
-//     await showDialog(
-//       context: context,
-//       builder: (_) {
-//         return AlertDialog(
-//           title: const Text("Add Note"),
-//           content: TextField(
-//             controller: noteController,
-//             decoration: const InputDecoration(
-//               hintText: "Enter your note...",
-//             ),
-//           ),
-//           actions: [
-//             TextButton(
-//               onPressed: () {
-//                 Navigator.pop(context);
-//               },
-//               child: const Text("Cancel"),
-//             ),
-//             ElevatedButton(
-//               onPressed: () {
-//                 final text = noteController.text.trim();
-
-//                 if (text.isNotEmpty) {
-//                   final key = getDateKey(selectedDay);
-
-//                   if (!notesByDate.containsKey(key)) {
-//                     notesByDate[key] = [];
-//                   }
-
-//                   notesByDate[key]!.add(text);
-
-//                   selectedDayNotes = notesByDate[key]!;
-
-//                   notifyListeners();
-//                 }
-
-//                 Navigator.pop(context);
-//               },
-//               child: const Text("Save"),
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   Future<void> loadTripsByDate(
-//     String uid,
-//     DateTime date,
-//   ) async {
-//     try {
-//       final snapshot = await _firestore
-//           .collection('users')
-//           .doc(uid)
-//           .collection('trip_status')
-//           .where(
-//             'status',
-//             isEqualTo: 'planned',
-//           )
-//           .get();
-
-//       selectedDayTrips = snapshot.docs
-//           .map(
-//             (e) => ProductModel.fromJson(e.data()),
-//           )
-//           .where(
-//             (p) =>
-//                 p.plannedDate != null &&
-//                 p.plannedDate!.year == date.year &&
-//                 p.plannedDate!.month == date.month &&
-//                 p.plannedDate!.day == date.day,
-//           )
-//           .toList();
-
-//       tripDays.clear();
-
-//       for (var doc in snapshot.docs) {
-//         final data = doc.data();
-
-//         if (data['plannedDate'] != null) {
-//           final Timestamp timestamp = data['plannedDate'];
-
-//           final planned = timestamp.toDate();
-
-//           tripDays.add(
-//             getDateKey(planned),
-//           );
-//         }
-//       }
-
-//       notifyListeners();
-//     } catch (e) {
-//       debugPrint(
-//         "loadTripsByDate error: $e",
-//       );
-//     }
-//   }
-
-//   bool hasTripOnDay(DateTime day) {
-//     final key = getDateKey(day);
-
-//     final hasTrip = tripDays.contains(key);
-
-//     final hasNote =
-//         notesByDate.containsKey(key) && notesByDate[key]!.isNotEmpty;
-
-//     return hasTrip || hasNote;
-//   }
-// }
-
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -175,23 +7,17 @@ import '../data/model/product_model.dart';
 class CalendarViewModel extends ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // =====================================================
   // CALENDAR
-  // =====================================================
 
   DateTime selectedDay = DateTime.now();
 
   DateTime focusedDay = DateTime.now();
 
-  // =====================================================
   // CONTROLLER
-  // =====================================================
 
   final TextEditingController noteController = TextEditingController();
 
-  // =====================================================
   // DATA
-  // =====================================================
 
   List<ProductModel> selectedDayTrips = [];
 
@@ -201,17 +27,12 @@ class CalendarViewModel extends ChangeNotifier {
 
   bool isLoading = false;
 
-  // =====================================================
   // DATE KEY
-  // =====================================================
-
   String getDateKey(DateTime date) {
     return "${date.year}-${date.month}-${date.day}";
   }
 
-  // =====================================================
   // LOAD ALL
-  // =====================================================
 
   Future<void> loadRoutines(
     DateTime date,
@@ -226,10 +47,7 @@ class CalendarViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // =====================================================
   // SELECT DAY
-  // =====================================================
-
   void onDaySelected(
     DateTime selected,
     DateTime focused,
@@ -243,9 +61,7 @@ class CalendarViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  // =====================================================
   // LOAD NOTES
-  // =====================================================
 
   Future<void> loadNotesByDate(
     String uid,
@@ -292,9 +108,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
   }
 
-  // =====================================================
   // ADD NOTE
-  // =====================================================
 
   Future<void> addNote(
     String text,
@@ -322,9 +136,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
   }
 
-  // =====================================================
   // UPDATE NOTE
-  // =====================================================
 
   Future<void> updateNote({
     required String docId,
@@ -354,9 +166,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
   }
 
-  // =====================================================
   // DELETE NOTE
-  // =====================================================
 
   Future<void> deleteNote(
     String docId,
@@ -382,9 +192,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
   }
 
-  // =====================================================
   // DIALOG
-  // =====================================================
 
   Future<void> showAddRoutineDialog(
     BuildContext context,
@@ -437,9 +245,7 @@ class CalendarViewModel extends ChangeNotifier {
     );
   }
 
-  // =====================================================
   // LOAD TRIPS
-  // =====================================================
 
   Future<void> loadTripsByDate(
     String uid,
@@ -497,9 +303,7 @@ class CalendarViewModel extends ChangeNotifier {
     }
   }
 
-  // =====================================================
   // HAS DATA
-  // =====================================================
 
   bool hasTripOnDay(
     DateTime day,

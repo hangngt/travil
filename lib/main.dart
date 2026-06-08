@@ -5,6 +5,7 @@ import 'package:travil/viewmodel/history_viewmodel.dart';
 import 'package:travil/viewmodel/planned_viewmodel.dart';
 import 'package:travil/viewmodel/rating_viewmodel.dart';
 import 'package:travil/viewmodel/trip_status_viewmodel.dart';
+import 'package:travil/views/onboarding.dart';
 
 import 'data/services/auth_service.dart';
 import 'viewmodel/home_viewmodel.dart';
@@ -53,7 +54,7 @@ class MyApp extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         title: 'Travel Recommendation',
         theme: ThemeData(primarySwatch: Colors.blue),
-        home: const RootScreen(),
+        home: const Onboarding(),
       ),
     );
   }

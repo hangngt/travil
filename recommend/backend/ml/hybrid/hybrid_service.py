@@ -167,7 +167,7 @@ class HybridService:
             'product_id',
             'title',
             'location',
-            'description'
+            'description',
             'rating',
             'price',
             'lat',
@@ -182,7 +182,12 @@ class HybridService:
         if user_lat is not None and user_lng is not None:
             candidates = candidates.dropna(subset=['lat', 'lng'])
         result = candidates.head(top_k)[result_columns].copy()
-        result = result.replace({np.nan: None})
+        result = result.replace(
+            [np.inf, -np.inf],
+                0,
+            )
+
+        result = result.fillna(0)
 
         float_cols = [
             'rating',
